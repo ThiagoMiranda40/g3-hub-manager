@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PTokenRouteImport } from './routes/p.$token'
 import { Route as ShowsIdRouteImport } from './routes/shows.$id'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PTokenRoute = PTokenRouteImport.update({
@@ -38,12 +44,14 @@ const ShowsIdRoute = ShowsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/settings': typeof SettingsRoute
   '/p/$token': typeof PTokenRoute
   '/shows/$id': typeof ShowsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/settings': typeof SettingsRoute
   '/p/$token': typeof PTokenRoute
   '/shows/$id': typeof ShowsIdRoute
 }
@@ -51,20 +59,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/settings': typeof SettingsRoute
   '/p/$token': typeof PTokenRoute
   '/shows/$id': typeof ShowsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/p/$token' | '/shows/$id'
+  fullPaths: '/' | '/auth' | '/settings' | '/p/$token' | '/shows/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/p/$token' | '/shows/$id'
-  id: '__root__' | '/' | '/auth' | '/p/$token' | '/shows/$id'
+  to: '/' | '/auth' | '/settings' | '/p/$token' | '/shows/$id'
+  id: '__root__' | '/' | '/auth' | '/settings' | '/p/$token' | '/shows/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  SettingsRoute: typeof SettingsRoute
   PTokenRoute: typeof PTokenRoute
   ShowsIdRoute: typeof ShowsIdRoute
 }
@@ -83,6 +93,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/p/$token': {
@@ -105,6 +122,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  SettingsRoute: SettingsRoute,
   PTokenRoute: PTokenRoute,
   ShowsIdRoute: ShowsIdRoute,
 }

@@ -59,7 +59,7 @@ function SettingsPage() {
   };
 
   const save = useMutation({
-    mutationFn: async (fn: () => Promise<{ error: { message: string } | null }>) => {
+    mutationFn: async (fn: () => PromiseLike<{ error: { message: string } | null }>) => {
       const { error } = await fn();
       if (error) throw new Error(error.message);
     },
@@ -111,12 +111,12 @@ function SettingsPage() {
                 used={roleUsed(role.id)}
                 onRename={(name) =>
                   save.mutate(() =>
-                    supabase.from("cast_roles").update({ name }).eq("id", role.id).then((r) => r),
+                    supabase.from("cast_roles").update({ name }).eq("id", role.id),
                   )
                 }
                 onDelete={() =>
                   save.mutate(() =>
-                    supabase.from("cast_roles").delete().eq("id", role.id).then((r) => r),
+                    supabase.from("cast_roles").delete().eq("id", role.id),
                   )
                 }
               />
@@ -125,7 +125,7 @@ function SettingsPage() {
               placeholder="Nova função"
               onCreate={async (name) => {
                 const values = await withUserId({ name, position: roles.length });
-                save.mutate(() => supabase.from("cast_roles").insert(values).then((r) => r));
+                save.mutate(() => supabase.from("cast_roles").insert(values));
               }}
             />
           </div>
@@ -146,12 +146,12 @@ function SettingsPage() {
                 used={typeUsed(type.id)}
                 onUpdate={(values) =>
                   save.mutate(() =>
-                    supabase.from("document_types").update(values).eq("id", type.id).then((r) => r),
+                    supabase.from("document_types").update(values).eq("id", type.id),
                   )
                 }
                 onDelete={() =>
                   save.mutate(() =>
-                    supabase.from("document_types").delete().eq("id", type.id).then((r) => r),
+                    supabase.from("document_types").delete().eq("id", type.id),
                   )
                 }
               />
@@ -165,7 +165,7 @@ function SettingsPage() {
                   reimbursable: false,
                   required: true,
                 });
-                save.mutate(() => supabase.from("document_types").insert(values).then((r) => r));
+                save.mutate(() => supabase.from("document_types").insert(values));
               }}
             />
           </div>
