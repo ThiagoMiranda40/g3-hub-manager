@@ -22,7 +22,7 @@ export const Route = createFileRoute("/p/$token")({
       },
     ],
   }),
-  component: PublicUpload;
+  component: PublicUpload,
 });
 
 function PublicUpload() {
