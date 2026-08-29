@@ -26,7 +26,6 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const router = useRouter();
   const { session } = useSession();
-  const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -43,18 +42,8 @@ function AuthPage() {
     setError(null);
     setInfo(null);
 
-    if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError(error.message);
-    } else {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: window.location.origin },
-      });
-      if (error) setError(error.message);
-      else setInfo("Conta criada. Se pedir confirmação, verifique seu e-mail.");
-    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) setError(error.message);
     setBusy(false);
   }
 
@@ -117,7 +106,7 @@ function AuthPage() {
             disabled={busy}
             className="w-full bg-foreground py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-background transition-colors hover:bg-signal disabled:opacity-50"
           >
-            {mode === "login" ? "Entrar" : "Criar conta"}
+            Entrar
           </button>
 
           <button
@@ -128,13 +117,9 @@ function AuthPage() {
             Entrar com Google
           </button>
 
-          <button
-            type="button"
-            onClick={() => setMode(mode === "login" ? "signup" : "login")}
-            className="w-full pt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
-          >
-            {mode === "login" ? "Criar a primeira conta" : "Já tenho conta"}
-          </button>
+          <p className="pt-1 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            Acesso somente para o administrador
+          </p>
         </form>
       </div>
     </div>
