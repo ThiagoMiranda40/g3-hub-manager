@@ -8,18 +8,25 @@ export const getPublicShow = createServerFn({ method: "GET" })
 
     const { data: show, error } = await supabaseAdmin
       .from("shows")
-      .select("id, city, venue, show_date, artist_id, artists(name)")
+      .select("id, city, venue, show_date, artist_id, user_id, artists(name)")
       .eq("public_token", data.token)
       .maybeSingle();
 
     if (error) throw new Error(error.message);
     if (!show) return null;
 
-    const { data: cast } = await supabaseAdmin
-      .from("cast_members")
-      .select("id, name, role")
-      .eq("show_id", show.id)
-      .order("name");
+    const [{ data: cast }, { data: roles }, { data: docTypes }] = await Promise.all([
+      supabaseAdmin.from("cast_members").select("id, name, role").eq("show_id", show.id).order("name"),
+      supabaseAdmin.from("cast_roles").select("id, name").eq("user_id", show.user_id),
+      supabaseAdmin
+        .from("document_types")
+        .select("id, name, reimbursable, position")
+        .eq("user_id", show.user_id)
+        .order("position"),
+    ]);
+
+    const roleName = (value: string) =>
+      (roles ?? []).find((r) => r.id === value)?.name ?? value;
 
     return {
       show: {
@@ -29,9 +36,22 @@ export const getPublicShow = createServerFn({ method: "GET" })
         show_date: show.show_date as string,
         artist: (show.artists as { name: string } | null)?.name ?? null,
       },
-      cast: (cast ?? []) as { id: string; name: string; role: string }[],
+      cast: (cast ?? []).map((m) => ({
+        id: m.id as string,
+        name: m.name as string,
+        role: roleName(m.role as string),
+      })),
+      docTypes: (docTypes ?? []).map((t) => ({
+        id: t.id as string,
+        name: t.name as string,
+        reimbursable: t.reimbursable as boolean,
+      })),
     };
   });
+
+const MAX_BYTES = 20 * 1024 * 1024;
+const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp", "pdf"];
+const ALLOWED_MIME = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
 
 export const submitDocument = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
@@ -39,10 +59,11 @@ export const submitDocument = createServerFn({ method: "POST" })
       .object({
         token: z.string().min(4),
         castMemberId: z.string().uuid(),
-        docType: z.enum(["passagem", "hotel", "nota"]),
+        docTypeId: z.string().uuid(),
         filePath: z.string().min(3),
         fileName: z.string().max(200).optional(),
         note: z.string().max(500).optional(),
+        amount: z.number().nonnegative().max(9999999).optional(),
       })
       .parse(data),
   )
@@ -68,14 +89,55 @@ export const submitDocument = createServerFn({ method: "POST" })
     if (!member) throw new Error("Pessoa não pertence a este show");
     if (!data.filePath.startsWith(`${show.id}/`)) throw new Error("Arquivo inválido");
 
+    const { data: docType } = await supabaseAdmin
+      .from("document_types")
+      .select("id, reimbursable")
+      .eq("id", data.docTypeId)
+      .eq("user_id", show.user_id)
+      .maybeSingle();
+
+    if (!docType) throw new Error("Tipo de documento inválido");
+
+    const removeUpload = async () => {
+      await supabaseAdmin.storage.from("documentos").remove([data.filePath]);
+    };
+
+    const ext = data.filePath.split(".").pop()?.toLowerCase() ?? "";
+    if (!ALLOWED_EXT.includes(ext)) {
+      await removeUpload();
+      throw new Error("Formato não aceito. Envie uma imagem (JPG, PNG, WEBP) ou PDF.");
+    }
+
+    const folder = data.filePath.slice(0, data.filePath.lastIndexOf("/"));
+    const objectName = data.filePath.slice(data.filePath.lastIndexOf("/") + 1);
+    const { data: listed } = await supabaseAdmin.storage
+      .from("documentos")
+      .list(folder, { search: objectName, limit: 1 });
+
+    const meta = listed?.find((o) => o.name === objectName);
+    if (!meta) throw new Error("Arquivo não encontrado no envio. Tente novamente.");
+
+    const size = (meta.metadata as { size?: number } | null)?.size ?? 0;
+    const mime = ((meta.metadata as { mimetype?: string } | null)?.mimetype ?? "").toLowerCase();
+
+    if (size > MAX_BYTES) {
+      await removeUpload();
+      throw new Error("Arquivo acima de 20 MB. Envie um arquivo menor.");
+    }
+    if (mime && !ALLOWED_MIME.includes(mime)) {
+      await removeUpload();
+      throw new Error("Formato não aceito. Envie uma imagem (JPG, PNG, WEBP) ou PDF.");
+    }
+
     const { error: insertError } = await supabaseAdmin.from("documents").insert({
       user_id: show.user_id,
       show_id: show.id,
       cast_member_id: data.castMemberId,
-      doc_type: data.docType,
+      doc_type: data.docTypeId,
       file_path: data.filePath,
       file_name: data.fileName ?? null,
       note: data.note ?? null,
+      amount: docType.reimbursable ? (data.amount ?? null) : null,
     });
 
     if (insertError) throw new Error(insertError.message);
