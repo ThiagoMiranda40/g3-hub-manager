@@ -21,6 +21,9 @@ export function AppShell({ children, email }: { children: ReactNode; email?: str
             <Link to="/" activeProps={{ className: "text-foreground" }}>
               Agenda
             </Link>
+            <Link to="/settings" activeProps={{ className: "text-foreground" }}>
+              Configurações
+            </Link>
           </nav>
           <div className="ml-auto flex items-center gap-3">
             {email ? (
