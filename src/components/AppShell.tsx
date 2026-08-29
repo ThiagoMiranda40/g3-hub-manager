@@ -2,7 +2,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export function AppShell({ children, email }: { children: ReactNode; email?: string | null }) {
+export function AppShell({ children, email }: { children: ReactNode; email?: string | null | undefined }) {
   const router = useRouter();
 
   async function signOut() {
