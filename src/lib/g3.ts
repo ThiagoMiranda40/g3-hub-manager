@@ -27,14 +27,17 @@ export function initials(name: string) {
     .join("");
 }
 
+function parseDate(date: string) {
+  const parts = date.split("-").map(Number);
+  return new Date(parts[0] ?? 1970, (parts[1] ?? 1) - 1, parts[2] ?? 1);
+}
+
 export function formatShowDate(date: string) {
-  const [y, m, d] = date.split("-").map(Number);
-  const dt = new Date(y, (m ?? 1) - 1, d);
+  const dt = parseDate(date);
   return dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }).toUpperCase();
 }
 
 export function formatWeekday(date: string) {
-  const [y, m, d] = date.split("-").map(Number);
-  const dt = new Date(y, (m ?? 1) - 1, d);
+  const dt = parseDate(date);
   return dt.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "").toUpperCase();
 }
