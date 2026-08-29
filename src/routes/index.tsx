@@ -71,22 +71,13 @@ function Dashboard() {
   const shows = data?.shows ?? [];
   const stats = shows.map((show) => {
     const members = (data?.cast ?? []).filter((c) => c.show_id === show.id);
-    const expected = members.length * requiredTypes.length;
-    const received = members.reduce(
-      (total, member) =>
-        total +
-        requiredTypes.filter((t) =>
-          (data?.docs ?? []).some(
-            (d) => d.cast_member_id === member.id && d.doc_type === t.id,
-          ),
-        ).length,
-      0,
-    );
-    return { show, expected, received: Math.min(received, expected) };
+    const docs = (data?.docs ?? []).filter((d) => d.show_id === show.id);
+    return { show, progress: computeShowProgress(members, docs, docTypes) };
   });
 
-  const complete = stats.filter((s) => s.expected > 0 && s.received >= s.expected).length;
-  const pending = stats.length - complete;
+  const complete = stats.filter((s) => s.progress.done).length;
+  const pending = stats.filter((s) => s.progress.hasRequirement && !s.progress.done).length;
+
 
   if (loading || !session) return null;
 
