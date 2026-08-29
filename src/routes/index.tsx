@@ -1,24 +1,303 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/hooks/useSession";
+import { AppShell } from "@/components/AppShell";
+import { DOC_TYPES, formatShowDate, formatWeekday } from "@/lib/g3";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Prancheta de Turnê — G3 Hub" },
+      {
+        name: "description",
+        content:
+          "Agenda de shows com status de documentos: veja num relance quem já enviou passagem, hotel e nota, e quem ainda falta.",
+      },
+      { property: "og:title", content: "Prancheta de Turnê — G3 Hub" },
+      {
+        property: "og:description",
+        content: "Agenda de shows com status de documentos da produção de turnê.",
+      },
+    ],
+  }),
+  component: Dashboard,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+type ShowRow = {
+  id: string;
+  city: string;
+  venue: string | null;
+  show_date: string;
+  artists: { name: string } | null;
+};
+
+function Dashboard() {
+  const router = useRouter();
+  const { session, loading } = useSession();
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !session) router.navigate({ to: "/auth" });
+  }, [loading, session, router]);
+
+  const enabled = !!session;
+
+  const { data } = useQuery({
+    queryKey: ["dashboard"],
+    enabled,
+    queryFn: async () => {
+      const [{ data: shows }, { data: cast }, { data: docs }] = await Promise.all([
+        supabase
+          .from("shows")
+          .select("id, city, venue, show_date, artists(name)")
+          .order("show_date"),
+        supabase.from("cast_members").select("id, show_id"),
+        supabase.from("documents").select("id, show_id, cast_member_id, doc_type"),
+      ]);
+      return {
+        shows: (shows ?? []) as ShowRow[],
+        cast: cast ?? [],
+        docs: docs ?? [],
+      };
+    },
+  });
+
+  const shows = data?.shows ?? [];
+  const stats = shows.map((show) => {
+    const members = (data?.cast ?? []).filter((c) => c.show_id === show.id);
+    const expected = members.length * DOC_TYPES.length;
+    const received = (data?.docs ?? []).filter(
+      (d) => d.show_id === show.id && members.some((m) => m.id === d.cast_member_id),
+    ).length;
+    return { show, expected, received: Math.min(received, expected) };
+  });
+
+  const complete = stats.filter((s) => s.expected > 0 && s.received >= s.expected).length;
+  const pending = stats.length - complete;
+
+  if (loading || !session) return null;
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
+    <AppShell email={session.user.email}>
+      <section className="grid grid-cols-1 items-end gap-6 border-b border-line pb-8 lg:grid-cols-12">
+        <div className="lg:col-span-7">
+          <p className="label-mono">(a) Agenda de produção</p>
+          <h1 className="mt-3 text-5xl leading-[0.92] sm:text-6xl">
+            Prancheta
+            <br />
+            de Turnê
+          </h1>
+        </div>
+        <div className="grid grid-cols-3 gap-px self-end border border-line bg-line lg:col-span-5">
+          <div className="bg-background p-4">
+            <div className="label-mono">Shows</div>
+            <div className="mt-2 font-display text-3xl leading-none">{shows.length}</div>
+          </div>
+          <div className="bg-background p-4">
+            <div className="label-mono text-signal">Pendentes</div>
+            <div className="mt-2 font-display text-3xl leading-none">{pending}</div>
+          </div>
+          <div className="bg-background p-4">
+            <div className="label-mono text-ok">Completos</div>
+            <div className="mt-2 font-display text-3xl leading-none">{complete}</div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="label-mono">(b) Próximas datas</div>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="bg-foreground px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-background transition-colors hover:bg-signal"
+          >
+            {open ? "Fechar" : "Novo show"}
+          </button>
+        </div>
+
+        {open ? <NewShowForm onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["dashboard"] }); }} /> : null}
+
+        <div className="border-t border-line">
+          {stats.length === 0 ? (
+            <p className="py-10 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              Nenhum show cadastrado ainda
+            </p>
+          ) : null}
+
+          {stats.map(({ show, expected, received }) => {
+            const done = expected > 0 && received >= expected;
+            const pct = expected > 0 ? Math.round((received / expected) * 100) : 0;
+            return (
+              <Link
+                key={show.id}
+                to="/shows/$id"
+                params={{ id: show.id }}
+                className="group grid grid-cols-1 items-center gap-3 border-b border-line py-5 transition-colors hover:bg-accent/50 sm:grid-cols-12 sm:gap-6"
+              >
+                <div className="font-mono text-[11px] tracking-wider text-muted-foreground sm:col-span-2">
+                  <div className="font-medium text-foreground">
+                    {formatWeekday(show.show_date)} · {show.show_date.slice(8, 10)}
+                  </div>
+                  <div>{formatShowDate(show.show_date)}</div>
+                </div>
+                <div className="sm:col-span-4">
+                  <div className="font-display text-2xl leading-none">
+                    {show.artists?.name ?? "SEM ARTISTA"}
+                  </div>
+                  <div className="mt-1 font-mono text-[11px] uppercase text-muted-foreground">
+                    {show.city}
+                    {show.venue ? ` · ${show.venue}` : ""}
+                  </div>
+                </div>
+                <div className="sm:col-span-3">
+                  <div className="mb-1.5 flex justify-between font-mono text-[11px]">
+                    <span className="text-muted-foreground">DOCUMENTOS</span>
+                    <span className={done ? "font-medium text-ok" : "font-medium text-signal"}>
+                      {received}/{expected}
+                    </span>
+                  </div>
+                  <div className="h-[3px] bg-line">
+                    <div
+                      className={done ? "h-full bg-ok" : "h-full bg-signal"}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
+                  {done ? (
+                    <span className="border border-ok px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-ok">
+                      Completo
+                    </span>
+                  ) : (
+                    <span className="bg-signal px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-signal-foreground">
+                      Pendente
+                    </span>
+                  )}
+                </div>
+                <div className="hidden text-right sm:col-span-1 sm:block">
+                  <span className="font-mono text-[11px] text-muted-foreground group-hover:text-foreground">
+                    ABRIR →
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+    </AppShell>
+  );
+}
+
+function NewShowForm({ onDone }: { onDone: () => void }) {
+  const [artist, setArtist] = useState("");
+  const [tour, setTour] = useState("");
+  const [city, setCity] = useState("");
+  const [date, setDate] = useState("");
+  const [venue, setVenue] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Sessão expirada");
+
+      const { data: existing } = await supabase
+        .from("artists")
+        .select("id")
+        .eq("name", artist)
+        .maybeSingle();
+
+      let artistId = existing?.id;
+      if (!artistId) {
+        const { data: created, error } = await supabase
+          .from("artists")
+          .insert({ name: artist, user_id: userId })
+          .select("id")
+          .single();
+        if (error) throw new Error(error.message);
+        artistId = created.id;
+      }
+
+      let tourId: string | null = null;
+      if (tour.trim()) {
+        const { data: createdTour, error } = await supabase
+          .from("tours")
+          .insert({ name: tour, artist_id: artistId, user_id: userId })
+          .select("id")
+          .single();
+        if (error) throw new Error(error.message);
+        tourId = createdTour.id;
+      }
+
+      const { error: showError } = await supabase.from("shows").insert({
+        user_id: userId,
+        artist_id: artistId,
+        tour_id: tourId,
+        city,
+        show_date: date,
+        venue: venue || null,
+      });
+      if (showError) throw new Error(showError.message);
+    },
+    onSuccess: onDone,
+    onError: (e: Error) => setError(e.message),
+  });
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        setError(null);
+        mutation.mutate();
+      }}
+      className="mb-6 grid grid-cols-1 gap-4 border border-line p-5 sm:grid-cols-2 lg:grid-cols-5"
     >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
+      <Field label="Artista" value={artist} onChange={setArtist} required />
+      <Field label="Tour (opcional)" value={tour} onChange={setTour} />
+      <Field label="Cidade" value={city} onChange={setCity} required />
+      <Field label="Data" value={date} onChange={setDate} type="date" required />
+      <Field label="Local" value={venue} onChange={setVenue} />
+      <div className="sm:col-span-2 lg:col-span-5">
+        {error ? <p className="mb-2 font-mono text-[11px] text-destructive">{error}</p> : null}
+        <button
+          type="submit"
+          disabled={mutation.isPending}
+          className="bg-signal px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-signal-foreground disabled:opacity-50"
+        >
+          Salvar show
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="label-mono">{label}</span>
+      <input
+        type={type}
+        required={required}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1.5 w-full border border-line bg-background px-3 py-2 text-sm outline-none focus:border-signal"
       />
-    </div>
+    </label>
   );
 }
