@@ -14,7 +14,196 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      artists: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cast_members: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          role: string
+          show_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          role?: string
+          show_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          role?: string
+          show_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cast_members_show_id_fkey"
+            columns: ["show_id"]
+            isOneToOne: false
+            referencedRelation: "shows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          cast_member_id: string
+          created_at: string
+          doc_type: string
+          file_name: string | null
+          file_path: string
+          id: string
+          note: string | null
+          show_id: string
+          user_id: string
+        }
+        Insert: {
+          cast_member_id: string
+          created_at?: string
+          doc_type: string
+          file_name?: string | null
+          file_path: string
+          id?: string
+          note?: string | null
+          show_id: string
+          user_id: string
+        }
+        Update: {
+          cast_member_id?: string
+          created_at?: string
+          doc_type?: string
+          file_name?: string | null
+          file_path?: string
+          id?: string
+          note?: string | null
+          show_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_cast_member_id_fkey"
+            columns: ["cast_member_id"]
+            isOneToOne: false
+            referencedRelation: "cast_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_show_id_fkey"
+            columns: ["show_id"]
+            isOneToOne: false
+            referencedRelation: "shows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shows: {
+        Row: {
+          artist_id: string | null
+          city: string
+          created_at: string
+          id: string
+          public_token: string
+          show_date: string
+          tour_id: string | null
+          user_id: string
+          venue: string | null
+        }
+        Insert: {
+          artist_id?: string | null
+          city: string
+          created_at?: string
+          id?: string
+          public_token?: string
+          show_date: string
+          tour_id?: string | null
+          user_id: string
+          venue?: string | null
+        }
+        Update: {
+          artist_id?: string | null
+          city?: string
+          created_at?: string
+          id?: string
+          public_token?: string
+          show_date?: string
+          tour_id?: string | null
+          user_id?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shows_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shows_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "tours"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tours: {
+        Row: {
+          artist_id: string
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tours_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
