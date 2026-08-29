@@ -3,8 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useSession";
+import { useCatalog } from "@/hooks/useCatalog";
 import { AppShell } from "@/components/AppShell";
-import { CAST_ROLES, DOC_TYPES, docTypeLabel, initials, roleLabel } from "@/lib/g3";
+import { formatBRL, initials, labelFrom } from "@/lib/g3";
 
 export const Route = createFileRoute("/shows/$id")({
   head: () => ({
@@ -32,11 +33,17 @@ function ShowDetail() {
   const qc = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [name, setName] = useState("");
-  const [role, setRole] = useState<string>("integrante");
+  const [role, setRole] = useState<string>("");
+
+  const { roles, docTypes } = useCatalog(!!session);
 
   useEffect(() => {
     if (!loading && !session) router.navigate({ to: "/auth" });
   }, [loading, session, router]);
+
+  useEffect(() => {
+    if (!role && roles[0]) setRole(roles[0].id);
+  }, [role, roles]);
 
   const { data } = useQuery({
     queryKey: ["show", id],
@@ -51,7 +58,7 @@ function ShowDetail() {
         supabase.from("cast_members").select("id, name, role").eq("show_id", id).order("name"),
         supabase
           .from("documents")
-          .select("id, cast_member_id, doc_type, file_path, file_name, note, created_at")
+          .select("id, cast_member_id, doc_type, file_path, file_name, note, amount, created_at")
           .eq("show_id", id)
           .order("created_at", { ascending: false }),
       ]);
@@ -86,13 +93,20 @@ function ShowDetail() {
   const show = data?.show;
   const cast = data?.cast ?? [];
   const docs = data?.docs ?? [];
+  const requiredTypes = docTypes.filter((t) => t.required);
+  const reimbursableIds = docTypes.filter((t) => t.reimbursable).map((t) => t.id);
+
   const publicUrl =
     typeof window !== "undefined" && show
       ? `${window.location.origin}/p/${show.public_token}`
       : "";
-  const pendingPeople = cast.filter(
-    (m) => DOC_TYPES.some((t) => !docs.some((d) => d.cast_member_id === m.id && d.doc_type === t.value)),
+  const pendingPeople = cast.filter((m) =>
+    requiredTypes.some((t) => !docs.some((d) => d.cast_member_id === m.id && d.doc_type === t.id)),
   ).length;
+
+  const reimbursableDocs = docs.filter((d) => reimbursableIds.includes(d.doc_type));
+  const withAmount = reimbursableDocs.filter((d) => d.amount != null);
+  const totalAmount = withAmount.reduce((sum, d) => sum + Number(d.amount ?? 0), 0);
 
   return (
     <AppShell email={session.user.email}>
@@ -161,23 +175,24 @@ function ShowDetail() {
                       </div>
                       <div className="min-w-0 flex-1 leading-tight">
                         <div className="truncate text-sm font-medium">{m.name}</div>
-                        <div className="label-mono">{roleLabel(m.role)}</div>
+                        <div className="label-mono">{labelFrom(roles, m.role)}</div>
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5">
-                        {DOC_TYPES.map((t) => {
+                        {docTypes.map((t) => {
                           const ok = docs.some(
-                            (d) => d.cast_member_id === m.id && d.doc_type === t.value,
+                            (d) => d.cast_member_id === m.id && d.doc_type === t.id,
                           );
+                          if (!t.required && !ok) return null;
                           return (
                             <span
-                              key={t.value}
+                              key={t.id}
                               className={
                                 ok
                                   ? "border border-ok px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-ok"
                                   : "bg-signal px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-signal-foreground"
                               }
                             >
-                              {t.label}
+                              {t.name}
                             </span>
                           );
                         })}
@@ -209,16 +224,16 @@ function ShowDetail() {
                       onChange={(e) => setRole(e.target.value)}
                       className="mt-1.5 border border-line bg-background px-3 py-2 text-sm outline-none focus:border-signal"
                     >
-                      {CAST_ROLES.map((r) => (
-                        <option key={r.value} value={r.value}>
-                          {r.label}
+                      {roles.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name}
                         </option>
                       ))}
                     </select>
                   </label>
                   <button
                     type="submit"
-                    disabled={addMember.isPending}
+                    disabled={addMember.isPending || !role}
                     className="bg-foreground px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-background disabled:opacity-50"
                   >
                     Adicionar
@@ -247,7 +262,7 @@ function ShowDetail() {
                           {mine.map((d) => (
                             <li key={d.id} className="flex items-center gap-2">
                               <span className="border border-ok px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-ok">
-                                {docTypeLabel(d.doc_type)}
+                                {labelFrom(docTypes, d.doc_type)}
                               </span>
                               <button
                                 onClick={() => openDocument(d.file_path)}
@@ -255,6 +270,11 @@ function ShowDetail() {
                               >
                                 {d.file_name ?? "abrir arquivo"}
                               </button>
+                              {d.amount != null ? (
+                                <span className="ml-auto shrink-0 font-mono text-[11px] text-muted-foreground">
+                                  {formatBRL(Number(d.amount))}
+                                </span>
+                              ) : null}
                             </li>
                           ))}
                         </ul>
@@ -262,6 +282,72 @@ function ShowDetail() {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-10">
+            <div className="label-mono mb-4">(e) Reembolsos</div>
+            <div className="border border-line">
+              <div className="grid grid-cols-1 gap-px bg-line sm:grid-cols-3">
+                <div className="bg-background p-4">
+                  <div className="label-mono">Documentos reembolsáveis</div>
+                  <div className="mt-2 font-display text-3xl leading-none">
+                    {reimbursableDocs.length}
+                  </div>
+                </div>
+                <div className="bg-background p-4">
+                  <div className="label-mono text-signal">Sem valor informado</div>
+                  <div className="mt-2 font-display text-3xl leading-none">
+                    {reimbursableDocs.length - withAmount.length}
+                  </div>
+                </div>
+                <div className="bg-background p-4">
+                  <div className="label-mono">Soma declarada</div>
+                  <div className="mt-2 font-display text-3xl leading-none">
+                    {formatBRL(totalAmount)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-line px-5 py-4">
+                {withAmount.length === 0 ? (
+                  <p className="label-mono">Nenhum valor informado até agora</p>
+                ) : (
+                  <div className="space-y-4">
+                    {cast.map((m) => {
+                      const items = withAmount.filter((d) => d.cast_member_id === m.id);
+                      if (items.length === 0) return null;
+                      const subtotal = items.reduce((s, d) => s + Number(d.amount ?? 0), 0);
+                      return (
+                        <div key={m.id}>
+                          <div className="flex items-center justify-between text-sm font-medium">
+                            <span>{m.name}</span>
+                            <span className="font-mono text-[11px]">{formatBRL(subtotal)}</span>
+                          </div>
+                          <ul className="mt-1 space-y-1">
+                            {items.map((d) => (
+                              <li
+                                key={d.id}
+                                className="flex items-center justify-between gap-3 font-mono text-[11px] text-muted-foreground"
+                              >
+                                <span className="truncate">
+                                  {labelFrom(docTypes, d.doc_type)} ·{" "}
+                                  {d.file_name ?? "arquivo"}
+                                </span>
+                                <span className="shrink-0">{formatBRL(Number(d.amount))}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <p className="mt-4 border-t border-line pt-3 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                  Valores auto-declarados por quem enviou o documento, sem conferência automática.
+                  Este é um resumo operacional, não um relatório fiscal.
+                </p>
               </div>
             </div>
           </section>
