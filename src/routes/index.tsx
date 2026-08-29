@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useSession";
 import { AppShell } from "@/components/AppShell";
-import { formatShowDate, formatWeekday } from "@/lib/g3";
+import { computeShowProgress, formatShowDate, formatWeekday } from "@/lib/g3";
 import { useCatalog } from "@/hooks/useCatalog";
 
 export const Route = createFileRoute("/")({
