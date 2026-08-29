@@ -133,6 +133,7 @@ export type Database = {
           file_name: string | null
           file_path: string
           id: string
+          is_reimbursement: boolean
           note: string | null
           show_id: string
           user_id: string
@@ -145,6 +146,7 @@ export type Database = {
           file_name?: string | null
           file_path: string
           id?: string
+          is_reimbursement?: boolean
           note?: string | null
           show_id: string
           user_id: string
@@ -157,6 +159,7 @@ export type Database = {
           file_name?: string | null
           file_path?: string
           id?: string
+          is_reimbursement?: boolean
           note?: string | null
           show_id?: string
           user_id?: string

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useSession";
 import { AppShell } from "@/components/AppShell";
-import { formatShowDate, formatWeekday } from "@/lib/g3";
+import { computeShowProgress, formatShowDate, formatWeekday } from "@/lib/g3";
 import { useCatalog } from "@/hooks/useCatalog";
 
 export const Route = createFileRoute("/")({
@@ -71,22 +71,13 @@ function Dashboard() {
   const shows = data?.shows ?? [];
   const stats = shows.map((show) => {
     const members = (data?.cast ?? []).filter((c) => c.show_id === show.id);
-    const expected = members.length * requiredTypes.length;
-    const received = members.reduce(
-      (total, member) =>
-        total +
-        requiredTypes.filter((t) =>
-          (data?.docs ?? []).some(
-            (d) => d.cast_member_id === member.id && d.doc_type === t.id,
-          ),
-        ).length,
-      0,
-    );
-    return { show, expected, received: Math.min(received, expected) };
+    const docs = (data?.docs ?? []).filter((d) => d.show_id === show.id);
+    return { show, progress: computeShowProgress(members, docs, docTypes) };
   });
 
-  const complete = stats.filter((s) => s.expected > 0 && s.received >= s.expected).length;
-  const pending = stats.length - complete;
+  const complete = stats.filter((s) => s.progress.done).length;
+  const pending = stats.filter((s) => s.progress.hasRequirement && !s.progress.done).length;
+
 
   if (loading || !session) return null;
 
@@ -137,9 +128,8 @@ function Dashboard() {
             </p>
           ) : null}
 
-          {stats.map(({ show, expected, received }) => {
-            const done = expected > 0 && received >= expected;
-            const pct = expected > 0 ? Math.round((received / expected) * 100) : 0;
+          {stats.map(({ show, progress }) => {
+            const { hasRequirement, expected, received, pct, done } = progress;
             return (
               <Link
                 key={show.id}
@@ -165,19 +155,33 @@ function Dashboard() {
                 <div className="sm:col-span-3">
                   <div className="mb-1.5 flex justify-between font-mono text-[11px]">
                     <span className="text-muted-foreground">DOCUMENTOS</span>
-                    <span className={done ? "font-medium text-ok" : "font-medium text-signal"}>
-                      {received}/{expected}
+                    <span
+                      className={
+                        !hasRequirement
+                          ? "text-muted-foreground"
+                          : done
+                            ? "font-medium text-ok"
+                            : "font-medium text-signal"
+                      }
+                    >
+                      {hasRequirement ? `${received}/${expected}` : "—"}
                     </span>
                   </div>
                   <div className="h-[3px] bg-line">
-                    <div
-                      className={done ? "h-full bg-ok" : "h-full bg-signal"}
-                      style={{ width: `${pct}%` }}
-                    />
+                    {hasRequirement ? (
+                      <div
+                        className={done ? "h-full bg-ok" : "h-full bg-signal"}
+                        style={{ width: `${pct}%` }}
+                      />
+                    ) : null}
                   </div>
                 </div>
                 <div className="sm:col-span-2">
-                  {done ? (
+                  {!hasRequirement ? (
+                    <span className="border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Sem exigência configurada
+                    </span>
+                  ) : done ? (
                     <span className="border border-ok px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-ok">
                       Completo
                     </span>
@@ -187,6 +191,7 @@ function Dashboard() {
                     </span>
                   )}
                 </div>
+
                 <div className="hidden text-right sm:col-span-1 sm:block">
                   <span className="font-mono text-[11px] text-muted-foreground group-hover:text-foreground">
                     ABRIR →

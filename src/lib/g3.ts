@@ -33,7 +33,49 @@ export const ALLOWED_MIME = [
   "application/pdf",
 ];
 
+export type ShowProgress = {
+  hasRequirement: boolean;
+  expected: number;
+  received: number;
+  pct: number;
+  done: boolean;
+  pendingPeople: number;
+};
+
+/** Única fonte de verdade do cálculo de pendência (prancheta e detalhe do show). */
+export function computeShowProgress(
+  members: { id: string }[],
+  docs: { cast_member_id: string; doc_type: string }[],
+  docTypes: { id: string; required: boolean }[],
+): ShowProgress {
+  const requiredTypes = docTypes.filter((t) => t.required);
+  const hasRequirement = requiredTypes.length > 0 && members.length > 0;
+  const expected = members.length * requiredTypes.length;
+  const received = members.reduce(
+    (total, member) =>
+      total +
+      requiredTypes.filter((t) =>
+        docs.some((d) => d.cast_member_id === member.id && d.doc_type === t.id),
+      ).length,
+    0,
+  );
+  const capped = Math.min(received, expected);
+  const pendingPeople = members.filter((m) =>
+    requiredTypes.some((t) => !docs.some((d) => d.cast_member_id === m.id && d.doc_type === t.id)),
+  ).length;
+
+  return {
+    hasRequirement,
+    expected,
+    received: capped,
+    pct: expected > 0 ? Math.round((capped / expected) * 100) : 0,
+    done: hasRequirement && capped >= expected,
+    pendingPeople,
+  };
+}
+
 export function labelFrom<T extends { id: string; name: string }>(
+
   list: T[],
   value: string | null | undefined,
 ) {
