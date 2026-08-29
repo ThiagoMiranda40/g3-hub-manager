@@ -70,8 +70,63 @@ export type Database = {
           },
         ]
       }
+      cast_roles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          position: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          position?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      document_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          position: number
+          reimbursable: boolean
+          required: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          position?: number
+          reimbursable?: boolean
+          required?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          reimbursable?: boolean
+          required?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
+          amount: number | null
           cast_member_id: string
           created_at: string
           doc_type: string
@@ -83,6 +138,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          amount?: number | null
           cast_member_id: string
           created_at?: string
           doc_type: string
@@ -94,6 +150,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          amount?: number | null
           cast_member_id?: string
           created_at?: string
           doc_type?: string

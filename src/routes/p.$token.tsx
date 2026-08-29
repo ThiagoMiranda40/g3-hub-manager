@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getPublicShow, submitDocument } from "@/lib/public-show.functions";
-import { DOC_TYPES, roleLabel } from "@/lib/g3";
+import { ALLOWED_EXTENSIONS, MAX_UPLOAD_BYTES } from "@/lib/g3";
 
 export const Route = createFileRoute("/p/$token")({
   head: () => ({
@@ -31,9 +31,11 @@ function PublicUpload() {
   const send = useServerFn(submitDocument);
 
   const [memberId, setMemberId] = useState("");
-  const [docType, setDocType] = useState<string>("passagem");
+  const [docTypeId, setDocTypeId] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [amount, setAmount] = useState("");
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,29 +44,60 @@ function PublicUpload() {
     queryFn: () => fetchShow({ data: { token } }),
   });
 
+  const docTypes = data?.docTypes ?? [];
+  const selectedType = docTypes.find((t) => t.id === docTypeId) ?? null;
+
+  useEffect(() => {
+    if (!docTypeId && docTypes[0]) setDocTypeId(docTypes[0].id);
+  }, [docTypeId, docTypes]);
+
+  useEffect(() => {
+    if (!file || !file.type.startsWith("image/")) {
+      setPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
   const upload = useMutation({
     mutationFn: async () => {
       if (!data || !file) throw new Error("Selecione um arquivo");
-      const ext = file.name.split(".").pop() ?? "bin";
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        throw new Error("Formato não aceito. Envie uma imagem (JPG, PNG, WEBP) ou PDF.");
+      }
+      if (file.size > MAX_UPLOAD_BYTES) {
+        throw new Error("Arquivo acima de 20 MB. Envie um arquivo menor.");
+      }
+
       const path = `${data.show.id}/${crypto.randomUUID()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("documentos").upload(path, file);
       if (upErr) throw new Error(upErr.message);
+
+      const parsedAmount = Number(amount.replace(/\./g, "").replace(",", "."));
       await send({
         data: {
           token,
           castMemberId: memberId,
-          docType: docType as "passagem" | "hotel" | "nota",
+          docTypeId,
           filePath: path,
           fileName: file.name,
           note: note || undefined,
+          amount:
+            selectedType?.reimbursable && amount.trim() && Number.isFinite(parsedAmount)
+              ? parsedAmount
+              : undefined,
         },
       });
     },
     onSuccess: () => {
       const person = data?.cast.find((c) => c.id === memberId)?.name ?? "";
-      setDone(`${DOC_TYPES.find((d) => d.value === docType)?.label} de ${person} recebido.`);
+      setDone(`${selectedType?.name ?? "Documento"} de ${person} recebido.`);
       setFile(null);
       setNote("");
+      setAmount("");
       setError(null);
     },
     onError: (e: Error) => setError(e.message),
@@ -130,7 +163,7 @@ function PublicUpload() {
                   onChange={() => setMemberId(m.id)}
                 />
                 <span className="text-sm font-medium">{m.name}</span>
-                <span className="label-mono ml-auto">{roleLabel(m.role)}</span>
+                <span className="label-mono ml-auto">{m.role}</span>
               </label>
             ))}
           </div>
@@ -139,18 +172,23 @@ function PublicUpload() {
         <div>
           <span className="label-mono">2 · Tipo de documento</span>
           <div className="mt-2 flex flex-wrap gap-2">
-            {DOC_TYPES.map((t) => (
+            {docTypes.length === 0 ? (
+              <p className="font-mono text-[11px] text-muted-foreground">
+                A produção ainda não configurou os tipos de documento.
+              </p>
+            ) : null}
+            {docTypes.map((t) => (
               <button
-                key={t.value}
+                key={t.id}
                 type="button"
-                onClick={() => setDocType(t.value)}
+                onClick={() => setDocTypeId(t.id)}
                 className={
-                  docType === t.value
+                  docTypeId === t.id
                     ? "bg-foreground px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-background"
                     : "border border-line px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground"
                 }
               >
-                {t.label}
+                {t.name}
               </button>
             ))}
           </div>
@@ -158,19 +196,66 @@ function PublicUpload() {
 
         <div>
           <span className="label-mono">3 · Foto ou arquivo</span>
-          <label className="mt-2 grid cursor-pointer place-items-center border border-dashed border-line px-4 py-8 text-center">
+          <label
+            className={
+              file
+                ? "mt-2 grid cursor-pointer place-items-center border-2 border-ok bg-ok/10 px-4 py-6 text-center"
+                : "mt-2 grid cursor-pointer place-items-center border border-dashed border-line px-4 py-8 text-center"
+            }
+          >
             <input
               type="file"
-              accept="image/*,application/pdf"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
               className="sr-only"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                setError(null);
+                setFile(e.target.files?.[0] ?? null);
+              }}
             />
-            <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
-              {file ? file.name : "Tocar para anexar"}
+            {preview ? (
+              <img
+                src={preview}
+                alt="Pré-visualização do documento selecionado"
+                className="mb-3 max-h-40 w-auto border border-line object-contain"
+              />
+            ) : null}
+            <span
+              className={
+                file
+                  ? "flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.15em] text-ok"
+                  : "font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground"
+              }
+            >
+              {file ? (
+                <>
+                  <span className="grid size-5 place-items-center border border-ok text-[11px]">✓</span>
+                  <span className="max-w-52 truncate normal-case tracking-normal">{file.name}</span>
+                </>
+              ) : (
+                "Tocar para anexar"
+              )}
             </span>
-            <span className="label-mono mt-1">JPG, PNG ou PDF · até 20 MB</span>
+            <span className="label-mono mt-1">
+              {file ? "Arquivo selecionado · tocar para trocar" : "JPG, PNG, WEBP ou PDF · até 20 MB"}
+            </span>
           </label>
         </div>
+
+        {selectedType?.reimbursable ? (
+          <label className="block">
+            <span className="label-mono">Valor (R$) — opcional</span>
+            <input
+              inputMode="decimal"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Ex.: 249,90"
+              className="mt-1.5 w-full border border-line bg-background px-3 py-2 text-sm outline-none focus:border-signal"
+            />
+            <span className="label-mono mt-1 block normal-case tracking-normal text-muted-foreground">
+              Valor informado por você, sem conferência automática.
+            </span>
+          </label>
+        ) : null}
 
         <label className="block">
           <span className="label-mono">Observação (opcional)</span>
@@ -186,7 +271,7 @@ function PublicUpload() {
 
         <button
           type="submit"
-          disabled={upload.isPending || !memberId || !file}
+          disabled={upload.isPending || !memberId || !file || !docTypeId}
           className="w-full bg-signal py-3.5 font-mono text-[12px] uppercase tracking-[0.2em] text-signal-foreground disabled:opacity-40"
         >
           {upload.isPending ? "Enviando…" : "Enviar documento"}

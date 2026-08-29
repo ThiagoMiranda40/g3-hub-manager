@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useSession";
 import { AppShell } from "@/components/AppShell";
-import { DOC_TYPES, formatShowDate, formatWeekday } from "@/lib/g3";
+import { formatShowDate, formatWeekday } from "@/lib/g3";
+import { useCatalog } from "@/hooks/useCatalog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -44,6 +45,8 @@ function Dashboard() {
   }, [loading, session, router]);
 
   const enabled = !!session;
+  const { docTypes } = useCatalog(enabled);
+  const requiredTypes = docTypes.filter((t) => t.required);
 
   const { data } = useQuery({
     queryKey: ["dashboard"],
@@ -68,10 +71,17 @@ function Dashboard() {
   const shows = data?.shows ?? [];
   const stats = shows.map((show) => {
     const members = (data?.cast ?? []).filter((c) => c.show_id === show.id);
-    const expected = members.length * DOC_TYPES.length;
-    const received = (data?.docs ?? []).filter(
-      (d) => d.show_id === show.id && members.some((m) => m.id === d.cast_member_id),
-    ).length;
+    const expected = members.length * requiredTypes.length;
+    const received = members.reduce(
+      (total, member) =>
+        total +
+        requiredTypes.filter((t) =>
+          (data?.docs ?? []).some(
+            (d) => d.cast_member_id === member.id && d.doc_type === t.id,
+          ),
+        ).length,
+      0,
+    );
     return { show, expected, received: Math.min(received, expected) };
   });
 
