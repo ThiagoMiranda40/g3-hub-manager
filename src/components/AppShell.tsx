@@ -13,7 +13,7 @@ export function AppShell({ children, email }: { children: ReactNode; email?: str
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-10 border-b border-line bg-background/90 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-[1240px] items-center gap-6 px-4 sm:px-6">
+        <div className="mx-auto flex h-14 max-w-[1240px] items-center gap-3 px-4 sm:gap-6 sm:px-6">
           <Link to="/" className="font-display text-lg leading-none tracking-wide">
             G3 HUB MANAGER<span className="text-signal">.</span>
           </Link>
