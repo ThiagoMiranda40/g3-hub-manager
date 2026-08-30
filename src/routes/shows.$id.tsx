@@ -98,7 +98,7 @@ function ShowDetail() {
   const docs = data?.docs ?? [];
   const progress = computeShowProgress(cast, docs, docTypes);
   const { hasRequirement, pendingPeople } = progress;
-  const requiredTypes = docTypes.filter((t) => t.required);
+  
 
   const publicUrl =
     typeof window !== "undefined" && show
