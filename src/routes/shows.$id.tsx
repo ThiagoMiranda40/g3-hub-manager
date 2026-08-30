@@ -10,13 +10,13 @@ import { computeShowProgress, formatBRL, initials, labelFrom } from "@/lib/g3";
 export const Route = createFileRoute("/shows/$id")({
   head: () => ({
     meta: [
-      { title: "Detalhe do show — G3 Hub" },
+      { title: "Detalhe do show — G3 Hub Manager" },
       {
         name: "description",
         content:
           "Elenco, pendências de documento e link público de envio para um show específico da turnê.",
       },
-      { property: "og:title", content: "Detalhe do show — G3 Hub" },
+      { property: "og:title", content: "Detalhe do show — G3 Hub Manager" },
       {
         property: "og:description",
         content: "Elenco, pendências e link de envio de documentos do show.",

@@ -10,13 +10,13 @@ import { useCatalog } from "@/hooks/useCatalog";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Prancheta de Turnê — G3 Hub" },
+      { title: "Prancheta de Turnê — G3 Hub Manager" },
       {
         name: "description",
         content:
           "Agenda de shows com status de documentos: veja num relance quem já enviou passagem, hotel e nota, e quem ainda falta.",
       },
-      { property: "og:title", content: "Prancheta de Turnê — G3 Hub" },
+      { property: "og:title", content: "Prancheta de Turnê — G3 Hub Manager" },
       {
         property: "og:description",
         content: "Agenda de shows com status de documentos da produção de turnê.",

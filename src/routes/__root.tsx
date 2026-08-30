@@ -77,7 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "G3 Hub — Prancheta de Turnê" },
+      { title: "G3 Hub Manager — Prancheta de Turnê" },
       {
         name: "description",
         content:
