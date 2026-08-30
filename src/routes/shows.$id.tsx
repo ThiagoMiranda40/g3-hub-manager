@@ -137,9 +137,22 @@ function ShowDetail() {
             </div>
             <div className="text-right font-mono text-[11px] leading-tight">
               <div className="text-muted-foreground">ELENCO</div>
-              <div className={pendingPeople ? "font-medium text-signal" : "font-medium text-ok"}>
-                {pendingPeople ? `${pendingPeople} pendentes` : "tudo recebido"}
+              <div
+                className={
+                  !hasRequirement
+                    ? "text-muted-foreground"
+                    : pendingPeople
+                      ? "font-medium text-signal"
+                      : "font-medium text-ok"
+                }
+              >
+                {!hasRequirement
+                  ? "sem exigência configurada"
+                  : pendingPeople
+                    ? `${pendingPeople} pendentes`
+                    : "tudo recebido"}
               </div>
+
             </div>
           </section>
 
