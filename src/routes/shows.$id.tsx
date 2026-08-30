@@ -58,7 +58,10 @@ function ShowDetail() {
         supabase.from("cast_members").select("id, name, role").eq("show_id", id).order("name"),
         supabase
           .from("documents")
-          .select("id, cast_member_id, doc_type, file_path, file_name, note, amount, created_at")
+          .select(
+            "id, cast_member_id, doc_type, file_path, file_name, note, amount, is_reimbursement, created_at",
+          )
+
           .eq("show_id", id)
           .order("created_at", { ascending: false }),
       ]);
