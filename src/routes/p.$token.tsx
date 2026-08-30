@@ -36,6 +36,8 @@ function PublicUpload() {
   const [preview, setPreview] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [amount, setAmount] = useState("");
+  const [isReimbursement, setIsReimbursement] = useState(false);
+
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
