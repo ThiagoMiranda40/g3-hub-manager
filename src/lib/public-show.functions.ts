@@ -131,6 +131,8 @@ export const submitDocument = createServerFn({ method: "POST" })
       throw new Error("Formato não aceito. Envie uma imagem (JPG, PNG, WEBP) ou PDF.");
     }
 
+    const isReimbursement = data.isReimbursement ?? docType.reimbursable;
+
     const { error: insertError } = await supabaseAdmin.from("documents").insert({
       user_id: show.user_id,
       show_id: show.id,
@@ -139,8 +141,10 @@ export const submitDocument = createServerFn({ method: "POST" })
       file_path: data.filePath,
       file_name: data.fileName ?? null,
       note: data.note ?? null,
-      amount: docType.reimbursable ? (data.amount ?? null) : null,
+      is_reimbursement: isReimbursement,
+      amount: isReimbursement ? (data.amount ?? null) : null,
     });
+
 
     if (insertError) throw new Error(insertError.message);
     return { ok: true };
