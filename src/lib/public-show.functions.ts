@@ -65,8 +65,10 @@ export const submitDocument = createServerFn({ method: "POST" })
         note: z.string().max(500).optional(),
         amount: z.number().nonnegative().max(9999999).optional(),
         isReimbursement: z.boolean().optional(),
-
+      })
+      .parse(data),
   )
+
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
