@@ -40,6 +40,11 @@ export type ShowProgress = {
   pct: number;
   done: boolean;
   pendingPeople: number;
+  /** Documentos recebidos no show, independente de exigência. */
+  totalDocs: number;
+  /** Pessoas do elenco que já enviaram ao menos um documento. */
+  peopleWithDocs: number;
+  members: number;
 };
 
 /** Única fonte de verdade do cálculo de pendência (prancheta e detalhe do show). */
@@ -63,6 +68,9 @@ export function computeShowProgress(
   const pendingPeople = members.filter((m) =>
     requiredTypes.some((t) => !docs.some((d) => d.cast_member_id === m.id && d.doc_type === t.id)),
   ).length;
+  const peopleWithDocs = members.filter((m) =>
+    docs.some((d) => d.cast_member_id === m.id),
+  ).length;
 
   return {
     hasRequirement,
@@ -71,8 +79,12 @@ export function computeShowProgress(
     pct: expected > 0 ? Math.round((capped / expected) * 100) : 0,
     done: hasRequirement && capped >= expected,
     pendingPeople,
+    totalDocs: docs.length,
+    peopleWithDocs,
+    members: members.length,
   };
 }
+
 
 export function labelFrom<T extends { id: string; name: string }>(
 
