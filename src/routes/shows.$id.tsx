@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useSession";
 import { useCatalog } from "@/hooks/useCatalog";
 import { AppShell } from "@/components/AppShell";
-import { formatBRL, initials, labelFrom } from "@/lib/g3";
+import { computeShowProgress, formatBRL, initials, labelFrom } from "@/lib/g3";
 
 export const Route = createFileRoute("/shows/$id")({
   head: () => ({
@@ -58,7 +58,10 @@ function ShowDetail() {
         supabase.from("cast_members").select("id, name, role").eq("show_id", id).order("name"),
         supabase
           .from("documents")
-          .select("id, cast_member_id, doc_type, file_path, file_name, note, amount, created_at")
+          .select(
+            "id, cast_member_id, doc_type, file_path, file_name, note, amount, is_reimbursement, created_at",
+          )
+
           .eq("show_id", id)
           .order("created_at", { ascending: false }),
       ]);
@@ -93,20 +96,19 @@ function ShowDetail() {
   const show = data?.show;
   const cast = data?.cast ?? [];
   const docs = data?.docs ?? [];
-  const requiredTypes = docTypes.filter((t) => t.required);
-  const reimbursableIds = docTypes.filter((t) => t.reimbursable).map((t) => t.id);
+  const progress = computeShowProgress(cast, docs, docTypes);
+  const { hasRequirement, pendingPeople } = progress;
+  
 
   const publicUrl =
     typeof window !== "undefined" && show
       ? `${window.location.origin}/p/${show.public_token}`
       : "";
-  const pendingPeople = cast.filter((m) =>
-    requiredTypes.some((t) => !docs.some((d) => d.cast_member_id === m.id && d.doc_type === t.id)),
-  ).length;
 
-  const reimbursableDocs = docs.filter((d) => reimbursableIds.includes(d.doc_type));
+  const reimbursableDocs = docs.filter((d) => d.is_reimbursement);
   const withAmount = reimbursableDocs.filter((d) => d.amount != null);
   const totalAmount = withAmount.reduce((sum, d) => sum + Number(d.amount ?? 0), 0);
+
 
   return (
     <AppShell email={session.user.email}>
@@ -135,9 +137,22 @@ function ShowDetail() {
             </div>
             <div className="text-right font-mono text-[11px] leading-tight">
               <div className="text-muted-foreground">ELENCO</div>
-              <div className={pendingPeople ? "font-medium text-signal" : "font-medium text-ok"}>
-                {pendingPeople ? `${pendingPeople} pendentes` : "tudo recebido"}
+              <div
+                className={
+                  !hasRequirement
+                    ? "text-muted-foreground"
+                    : pendingPeople
+                      ? "font-medium text-signal"
+                      : "font-medium text-ok"
+                }
+              >
+                {!hasRequirement
+                  ? "sem exigência configurada"
+                  : pendingPeople
+                    ? `${pendingPeople} pendentes`
+                    : "tudo recebido"}
               </div>
+
             </div>
           </section>
 

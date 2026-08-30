@@ -46,7 +46,7 @@ function Dashboard() {
 
   const enabled = !!session;
   const { docTypes } = useCatalog(enabled);
-  const requiredTypes = docTypes.filter((t) => t.required);
+  
 
   const { data } = useQuery({
     queryKey: ["dashboard"],

@@ -36,6 +36,8 @@ function PublicUpload() {
   const [preview, setPreview] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [amount, setAmount] = useState("");
+  const [isReimbursement, setIsReimbursement] = useState(false);
+
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +52,11 @@ function PublicUpload() {
   useEffect(() => {
     if (!docTypeId && docTypes[0]) setDocTypeId(docTypes[0].id);
   }, [docTypeId, docTypes]);
+
+  useEffect(() => {
+    if (selectedType) setIsReimbursement(selectedType.reimbursable);
+  }, [selectedType?.id]);
+
 
   useEffect(() => {
     if (!file || !file.type.startsWith("image/")) {
@@ -85,13 +92,15 @@ function PublicUpload() {
           filePath: path,
           fileName: file.name,
           note: note || undefined,
+          isReimbursement,
           amount:
-            selectedType?.reimbursable && amount.trim() && Number.isFinite(parsedAmount)
+            isReimbursement && amount.trim() && Number.isFinite(parsedAmount)
               ? parsedAmount
               : undefined,
         },
       });
     },
+
     onSuccess: () => {
       const person = data?.cast.find((c) => c.id === memberId)?.name ?? "";
       setDone(`${selectedType?.name ?? "Documento"} de ${person} recebido.`);
@@ -241,8 +250,24 @@ function PublicUpload() {
           </label>
         </div>
 
-        {selectedType?.reimbursable ? (
+        <label className="flex cursor-pointer items-start gap-3 border border-line px-3 py-3">
+          <input
+            type="checkbox"
+            checked={isReimbursement}
+            onChange={(e) => setIsReimbursement(e.target.checked)}
+            className="mt-0.5 size-4 accent-[var(--signal,currentColor)]"
+          />
+          <span className="leading-tight">
+            <span className="block text-sm font-medium">Este documento é para reembolso?</span>
+            <span className="label-mono mt-0.5 block normal-case tracking-normal text-muted-foreground">
+              Vem pré-marcado conforme o tipo escolhido, mas você pode alterar.
+            </span>
+          </span>
+        </label>
+
+        {isReimbursement ? (
           <label className="block">
+
             <span className="label-mono">Valor (R$) — opcional</span>
             <input
               inputMode="decimal"
