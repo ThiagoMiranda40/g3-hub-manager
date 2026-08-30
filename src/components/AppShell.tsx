@@ -17,7 +17,7 @@ export function AppShell({ children, email }: { children: ReactNode; email?: str
           <Link to="/" className="font-display text-lg leading-none tracking-wide">
             G3 HUB MANAGER<span className="text-signal">.</span>
           </Link>
-          <nav className="hidden font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground sm:flex sm:items-center sm:gap-6">
+          <nav className="flex items-center gap-4 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground sm:gap-6">
             <Link to="/" activeProps={{ className: "text-foreground" }}>
               Agenda
             </Link>
