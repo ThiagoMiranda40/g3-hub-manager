@@ -54,6 +54,11 @@ function PublicUpload() {
   }, [docTypeId, docTypes]);
 
   useEffect(() => {
+    if (selectedType) setIsReimbursement(selectedType.reimbursable);
+  }, [selectedType?.id]);
+
+
+  useEffect(() => {
     if (!file || !file.type.startsWith("image/")) {
       setPreview(null);
       return;
@@ -87,13 +92,15 @@ function PublicUpload() {
           filePath: path,
           fileName: file.name,
           note: note || undefined,
+          isReimbursement,
           amount:
-            selectedType?.reimbursable && amount.trim() && Number.isFinite(parsedAmount)
+            isReimbursement && amount.trim() && Number.isFinite(parsedAmount)
               ? parsedAmount
               : undefined,
         },
       });
     },
+
     onSuccess: () => {
       const person = data?.cast.find((c) => c.id === memberId)?.name ?? "";
       setDone(`${selectedType?.name ?? "Documento"} de ${person} recebido.`);
