@@ -93,20 +93,19 @@ function ShowDetail() {
   const show = data?.show;
   const cast = data?.cast ?? [];
   const docs = data?.docs ?? [];
+  const progress = computeShowProgress(cast, docs, docTypes);
+  const { hasRequirement, pendingPeople } = progress;
   const requiredTypes = docTypes.filter((t) => t.required);
-  const reimbursableIds = docTypes.filter((t) => t.reimbursable).map((t) => t.id);
 
   const publicUrl =
     typeof window !== "undefined" && show
       ? `${window.location.origin}/p/${show.public_token}`
       : "";
-  const pendingPeople = cast.filter((m) =>
-    requiredTypes.some((t) => !docs.some((d) => d.cast_member_id === m.id && d.doc_type === t.id)),
-  ).length;
 
-  const reimbursableDocs = docs.filter((d) => reimbursableIds.includes(d.doc_type));
+  const reimbursableDocs = docs.filter((d) => d.is_reimbursement);
   const withAmount = reimbursableDocs.filter((d) => d.amount != null);
   const totalAmount = withAmount.reduce((sum, d) => sum + Number(d.amount ?? 0), 0);
+
 
   return (
     <AppShell email={session.user.email}>
