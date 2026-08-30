@@ -250,8 +250,24 @@ function PublicUpload() {
           </label>
         </div>
 
-        {selectedType?.reimbursable ? (
+        <label className="flex cursor-pointer items-start gap-3 border border-line px-3 py-3">
+          <input
+            type="checkbox"
+            checked={isReimbursement}
+            onChange={(e) => setIsReimbursement(e.target.checked)}
+            className="mt-0.5 size-4 accent-[var(--signal,currentColor)]"
+          />
+          <span className="leading-tight">
+            <span className="block text-sm font-medium">Este documento é para reembolso?</span>
+            <span className="label-mono mt-0.5 block normal-case tracking-normal text-muted-foreground">
+              Vem pré-marcado conforme o tipo escolhido, mas você pode alterar.
+            </span>
+          </span>
+        </label>
+
+        {isReimbursement ? (
           <label className="block">
+
             <span className="label-mono">Valor (R$) — opcional</span>
             <input
               inputMode="decimal"
