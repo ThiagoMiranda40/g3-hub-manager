@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useSession";
 import { useCatalog } from "@/hooks/useCatalog";
 import { AppShell } from "@/components/AppShell";
-import { formatBRL, initials, labelFrom } from "@/lib/g3";
+import { computeShowProgress, formatBRL, initials, labelFrom } from "@/lib/g3";
 
 export const Route = createFileRoute("/shows/$id")({
   head: () => ({
