@@ -10,16 +10,16 @@ import type { CastRole, DocumentType } from "@/lib/g3";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Configurações — G3 Hub" },
+      { title: "Configurações — G3 Hub Manager" },
       {
         name: "description",
         content:
           "Gerencie as funções do elenco e os tipos de documento exigidos na produção de turnê.",
       },
-      { property: "og:title", content: "Configurações — G3 Hub" },
+      { property: "og:title", content: "Configurações — G3 Hub Manager" },
       {
         property: "og:description",
-        content: "Funções do elenco e tipos de documento configuráveis do G3 Hub.",
+        content: "Funções do elenco e tipos de documento configuráveis do G3 Hub Manager.",
       },
     ],
   }),

@@ -7,16 +7,16 @@ import { useSession } from "@/hooks/useSession";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Entrar — G3 Hub" },
+      { title: "Entrar — G3 Hub Manager" },
       {
         name: "description",
         content:
-          "Acesso do administrador do G3 Hub para gerenciar shows, elenco e documentos de turnê.",
+          "Acesso do administrador do G3 Hub Manager para gerenciar shows, elenco e documentos de turnê.",
       },
-      { property: "og:title", content: "Entrar — G3 Hub" },
+      { property: "og:title", content: "Entrar — G3 Hub Manager" },
       {
         property: "og:description",
-        content: "Acesso do administrador do G3 Hub para gerenciar a logística de turnê.",
+        content: "Acesso do administrador do G3 Hub Manager para gerenciar a logística de turnê.",
       },
     ],
   }),
@@ -64,7 +64,7 @@ function AuthPage() {
     <div className="grid min-h-screen place-items-center px-4 py-12">
       <div className="w-full max-w-sm">
         <p className="label-mono">Acesso restrito · administração</p>
-        <h1 className="mt-2 font-display text-5xl leading-[0.9]">G3 HUB</h1>
+        <h1 className="mt-2 font-display text-5xl leading-[0.9]">G3 HUB MANAGER</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Prancheta de turnê: elenco, documentos e pendências de cada show.
         </p>
