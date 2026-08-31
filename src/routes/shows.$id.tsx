@@ -34,6 +34,10 @@ function ShowDetail() {
   const [copied, setCopied] = useState(false);
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("");
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const { roles, docTypes } = useCatalog(!!session);
 
@@ -52,7 +56,9 @@ function ShowDetail() {
       const [{ data: show }, { data: cast }, { data: docs }] = await Promise.all([
         supabase
           .from("shows")
-          .select("id, city, venue, show_date, public_token, artists(name), tours(name)")
+          .select(
+            "id, city, venue, show_date, public_token, artist_id, tour_id, artists(name), tours(name)",
+          )
           .eq("id", id)
           .maybeSingle(),
         supabase.from("cast_members").select("id, name, role").eq("show_id", id).order("name"),
@@ -86,6 +92,38 @@ function ShowDetail() {
     },
   });
 
+  const removeMember = useMutation({
+    mutationFn: async (memberId: string) => {
+      const { error } = await supabase.from("cast_members").delete().eq("id", memberId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["show", id] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e: Error) => setActionError(e.message),
+  });
+
+  const deleteShow = useMutation({
+    mutationFn: async () => {
+      const paths = (data?.docs ?? []).map((d) => d.file_path).filter(Boolean);
+      if (paths.length) await supabase.storage.from("documentos").remove(paths);
+      const del = async (table: "documents" | "cast_members") => {
+        const { error } = await supabase.from(table).delete().eq("show_id", id);
+        if (error) throw new Error(error.message);
+      };
+      await del("documents");
+      await del("cast_members");
+      const { error } = await supabase.from("shows").delete().eq("id", id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      router.navigate({ to: "/" });
+    },
+    onError: (e: Error) => setActionError(e.message),
+  });
+
   async function openDocument(path: string) {
     const { data } = await supabase.storage.from("documentos").createSignedUrl(path, 60 * 10);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank", "noopener");
@@ -108,6 +146,8 @@ function ShowDetail() {
   const reimbursableDocs = docs.filter((d) => d.is_reimbursement);
   const withAmount = reimbursableDocs.filter((d) => d.amount != null);
   const totalAmount = withAmount.reduce((sum, d) => sum + Number(d.amount ?? 0), 0);
+
+
 
 
   return (
@@ -152,9 +192,78 @@ function ShowDetail() {
                     ? `${pendingPeople} pendentes`
                     : "tudo recebido"}
               </div>
-
+              <div className="mt-3 flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setEditing((v) => !v);
+                    setConfirmDelete(false);
+                    setActionError(null);
+                  }}
+                  className="border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] hover:bg-accent"
+                >
+                  {editing ? "Cancelar" : "Editar"}
+                </button>
+                <button
+                  onClick={() => {
+                    setConfirmDelete((v) => !v);
+                    setEditing(false);
+                    setConfirmText("");
+                    setActionError(null);
+                  }}
+                  className="border border-destructive px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-destructive hover:bg-destructive/10"
+                >
+                  Excluir
+                </button>
+              </div>
             </div>
           </section>
+
+          {editing ? (
+            <EditShowForm
+              show={show}
+              onCancel={() => setEditing(false)}
+              onSaved={() => {
+                setEditing(false);
+                qc.invalidateQueries({ queryKey: ["show", id] });
+                qc.invalidateQueries({ queryKey: ["dashboard"] });
+              }}
+            />
+          ) : null}
+
+          {confirmDelete ? (
+            <section className="mt-6 border border-destructive p-5">
+              <div className="label-mono text-destructive">Excluir show</div>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed">
+                Esta ação apaga <strong>permanentemente</strong> o show, as {cast.length} pessoas do
+                elenco e os {docs.length} documento{docs.length === 1 ? "" : "s"} enviados
+                (incluindo os arquivos). Não há como desfazer.
+              </p>
+              <p className="mt-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                Para confirmar, digite a cidade do show: {show.city}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <input
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  className="border border-line bg-background px-3 py-2 text-sm outline-none focus:border-destructive"
+                />
+                <button
+                  disabled={
+                    confirmText.trim().toLowerCase() !== show.city.trim().toLowerCase() ||
+                    deleteShow.isPending
+                  }
+                  onClick={() => deleteShow.mutate()}
+                  className="bg-destructive px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-destructive-foreground disabled:opacity-40"
+                >
+                  Excluir definitivamente
+                </button>
+              </div>
+              {actionError ? (
+                <p className="mt-2 font-mono text-[11px] text-destructive">{actionError}</p>
+              ) : null}
+            </section>
+          ) : null}
+
 
           <section className="mt-6 flex flex-wrap items-center justify-between gap-4 border border-line bg-accent/40 px-5 py-4">
             <div className="font-mono text-[11px] leading-tight">
@@ -183,7 +292,9 @@ function ShowDetail() {
                       Adicione as pessoas do show
                     </p>
                   ) : null}
-                  {cast.map((m) => (
+                  {cast.map((m) => {
+                    const memberDocs = docs.filter((d) => d.cast_member_id === m.id).length;
+                    return (
                     <div key={m.id} className="flex flex-wrap items-center gap-3 border-b border-line py-3 last:border-b-0">
                       <div className="grid size-8 shrink-0 place-items-center border border-line font-mono text-[11px]">
                         {initials(m.name)}
@@ -212,8 +323,37 @@ function ShowDetail() {
                           );
                         })}
                       </div>
+                      <button
+                        title={
+                          memberDocs > 0
+                            ? `Não é possível excluir: ${memberDocs} documento${memberDocs === 1 ? "" : "s"} vinculado${memberDocs === 1 ? "" : "s"}`
+                            : "Remover do elenco"
+                        }
+                        onClick={() => {
+                          setActionError(null);
+                          if (memberDocs > 0) {
+                            setActionError(
+                              `${m.name} tem ${memberDocs} documento${memberDocs === 1 ? "" : "s"} enviado${memberDocs === 1 ? "" : "s"}. Exclua o${memberDocs === 1 ? "" : "s"} documento${memberDocs === 1 ? "" : "s"} antes de remover a pessoa.`,
+                            );
+                            return;
+                          }
+                          removeMember.mutate(m.id);
+                        }}
+                        className={
+                          memberDocs > 0
+                            ? "shrink-0 border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+                            : "shrink-0 border border-destructive px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-destructive hover:bg-destructive/10"
+                        }
+                      >
+                        Excluir
+                      </button>
                     </div>
-                  ))}
+                    );
+                  })}
+                  {actionError && !confirmDelete ? (
+                    <p className="pb-3 font-mono text-[11px] text-destructive">{actionError}</p>
+                  ) : null}
+
                 </div>
 
                 <form
@@ -369,5 +509,161 @@ function ShowDetail() {
         </>
       )}
     </AppShell>
+  );
+}
+
+type EditableShow = {
+  id: string;
+  city: string;
+  venue: string | null;
+  show_date: string;
+  artist_id: string | null;
+  tour_id: string | null;
+  artists: { name: string } | null;
+  tours: { name: string } | null;
+};
+
+function EditShowForm({
+  show,
+  onCancel,
+  onSaved,
+}: {
+  show: EditableShow;
+  onCancel: () => void;
+  onSaved: () => void;
+}) {
+  const [artist, setArtist] = useState(show.artists?.name ?? "");
+  const [tour, setTour] = useState(show.tours?.name ?? "");
+  const [city, setCity] = useState(show.city);
+  const [date, setDate] = useState(show.show_date);
+  const [venue, setVenue] = useState(show.venue ?? "");
+  const [error, setError] = useState<string | null>(null);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Sessão expirada");
+
+      let artistId = show.artist_id;
+      if (artist.trim() && artist.trim() !== (show.artists?.name ?? "")) {
+        const { data: existing } = await supabase
+          .from("artists")
+          .select("id")
+          .eq("name", artist.trim())
+          .maybeSingle();
+        if (existing) {
+          artistId = existing.id;
+        } else {
+          const { data: created, error: artistError } = await supabase
+            .from("artists")
+            .insert({ name: artist.trim(), user_id: userId })
+            .select("id")
+            .single();
+          if (artistError) throw new Error(artistError.message);
+          artistId = created.id;
+        }
+      }
+
+      let tourId = show.tour_id;
+      const tourName = tour.trim();
+      if (tourName !== (show.tours?.name ?? "")) {
+        if (!tourName) {
+          tourId = null;
+        } else if (tourId) {
+          const { error: tourError } = await supabase
+            .from("tours")
+            .update({ name: tourName })
+            .eq("id", tourId);
+          if (tourError) throw new Error(tourError.message);
+        } else {
+          if (!artistId) throw new Error("Informe o artista para criar a tour");
+          const { data: createdTour, error: tourError } = await supabase
+            .from("tours")
+            .insert({ name: tourName, artist_id: artistId, user_id: userId })
+            .select("id")
+            .single();
+          if (tourError) throw new Error(tourError.message);
+          tourId = createdTour.id;
+        }
+      }
+
+      const { error: updateError } = await supabase
+        .from("shows")
+        .update({
+          artist_id: artistId,
+          tour_id: tourId,
+          city,
+          show_date: date,
+          venue: venue || null,
+        })
+        .eq("id", show.id);
+      if (updateError) throw new Error(updateError.message);
+    },
+    onSuccess: onSaved,
+    onError: (e: Error) => setError(e.message),
+  });
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        setError(null);
+        save.mutate();
+      }}
+      className="mt-6 grid grid-cols-1 gap-4 border border-line p-5 sm:grid-cols-2 lg:grid-cols-5"
+    >
+      <EditField label="Artista" value={artist} onChange={setArtist} required />
+      <EditField label="Tour (opcional)" value={tour} onChange={setTour} />
+      <EditField label="Cidade" value={city} onChange={setCity} required />
+      <EditField label="Data" value={date} onChange={setDate} type="date" required />
+      <EditField label="Local" value={venue} onChange={setVenue} />
+      <div className="sm:col-span-2 lg:col-span-5">
+        {error ? <p className="mb-2 font-mono text-[11px] text-destructive">{error}</p> : null}
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="submit"
+            disabled={save.isPending}
+            className="bg-signal px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-signal-foreground disabled:opacity-50"
+          >
+            Salvar alterações
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="border border-line px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] hover:bg-accent"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function EditField({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="label-mono">{label}</span>
+      <input
+        type={type}
+        required={required}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1.5 w-full border border-line bg-background px-3 py-2 text-sm outline-none focus:border-signal"
+      />
+    </label>
   );
 }
