@@ -192,9 +192,78 @@ function ShowDetail() {
                     ? `${pendingPeople} pendentes`
                     : "tudo recebido"}
               </div>
-
+              <div className="mt-3 flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setEditing((v) => !v);
+                    setConfirmDelete(false);
+                    setActionError(null);
+                  }}
+                  className="border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] hover:bg-accent"
+                >
+                  {editing ? "Cancelar" : "Editar"}
+                </button>
+                <button
+                  onClick={() => {
+                    setConfirmDelete((v) => !v);
+                    setEditing(false);
+                    setConfirmText("");
+                    setActionError(null);
+                  }}
+                  className="border border-destructive px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-destructive hover:bg-destructive/10"
+                >
+                  Excluir
+                </button>
+              </div>
             </div>
           </section>
+
+          {editing ? (
+            <EditShowForm
+              show={show}
+              onCancel={() => setEditing(false)}
+              onSaved={() => {
+                setEditing(false);
+                qc.invalidateQueries({ queryKey: ["show", id] });
+                qc.invalidateQueries({ queryKey: ["dashboard"] });
+              }}
+            />
+          ) : null}
+
+          {confirmDelete ? (
+            <section className="mt-6 border border-destructive p-5">
+              <div className="label-mono text-destructive">Excluir show</div>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed">
+                Esta ação apaga <strong>permanentemente</strong> o show, as {cast.length} pessoas do
+                elenco e os {docs.length} documento{docs.length === 1 ? "" : "s"} enviados
+                (incluindo os arquivos). Não há como desfazer.
+              </p>
+              <p className="mt-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                Para confirmar, digite a cidade do show: {show.city}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <input
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  className="border border-line bg-background px-3 py-2 text-sm outline-none focus:border-destructive"
+                />
+                <button
+                  disabled={
+                    confirmText.trim().toLowerCase() !== show.city.trim().toLowerCase() ||
+                    deleteShow.isPending
+                  }
+                  onClick={() => deleteShow.mutate()}
+                  className="bg-destructive px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-destructive-foreground disabled:opacity-40"
+                >
+                  Excluir definitivamente
+                </button>
+              </div>
+              {actionError ? (
+                <p className="mt-2 font-mono text-[11px] text-destructive">{actionError}</p>
+              ) : null}
+            </section>
+          ) : null}
+
 
           <section className="mt-6 flex flex-wrap items-center justify-between gap-4 border border-line bg-accent/40 px-5 py-4">
             <div className="font-mono text-[11px] leading-tight">
