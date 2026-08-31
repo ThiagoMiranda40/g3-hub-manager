@@ -34,6 +34,10 @@ function ShowDetail() {
   const [copied, setCopied] = useState(false);
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("");
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const { roles, docTypes } = useCatalog(!!session);
 
@@ -52,7 +56,9 @@ function ShowDetail() {
       const [{ data: show }, { data: cast }, { data: docs }] = await Promise.all([
         supabase
           .from("shows")
-          .select("id, city, venue, show_date, public_token, artists(name), tours(name)")
+          .select(
+            "id, city, venue, show_date, public_token, artist_id, tour_id, artists(name), tours(name)",
+          )
           .eq("id", id)
           .maybeSingle(),
         supabase.from("cast_members").select("id, name, role").eq("show_id", id).order("name"),
@@ -86,6 +92,38 @@ function ShowDetail() {
     },
   });
 
+  const removeMember = useMutation({
+    mutationFn: async (memberId: string) => {
+      const { error } = await supabase.from("cast_members").delete().eq("id", memberId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["show", id] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e: Error) => setActionError(e.message),
+  });
+
+  const deleteShow = useMutation({
+    mutationFn: async () => {
+      const paths = (data?.docs ?? []).map((d) => d.file_path).filter(Boolean);
+      if (paths.length) await supabase.storage.from("documentos").remove(paths);
+      const del = async (table: "documents" | "cast_members") => {
+        const { error } = await supabase.from(table).delete().eq("show_id", id);
+        if (error) throw new Error(error.message);
+      };
+      await del("documents");
+      await del("cast_members");
+      const { error } = await supabase.from("shows").delete().eq("id", id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      router.navigate({ to: "/" });
+    },
+    onError: (e: Error) => setActionError(e.message),
+  });
+
   async function openDocument(path: string) {
     const { data } = await supabase.storage.from("documentos").createSignedUrl(path, 60 * 10);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank", "noopener");
@@ -108,6 +146,8 @@ function ShowDetail() {
   const reimbursableDocs = docs.filter((d) => d.is_reimbursement);
   const withAmount = reimbursableDocs.filter((d) => d.amount != null);
   const totalAmount = withAmount.reduce((sum, d) => sum + Number(d.amount ?? 0), 0);
+
+
 
 
   return (
