@@ -129,7 +129,8 @@ function Dashboard() {
           ) : null}
 
           {stats.map(({ show, progress }) => {
-            const { hasRequirement, expected, received, pct, done } = progress;
+            const { hasRequirement, expected, received, pct, done, totalDocs, peopleWithDocs, members } =
+              progress;
             return (
               <Link
                 key={show.id}
@@ -153,7 +154,7 @@ function Dashboard() {
                   </div>
                 </div>
                 <div className="sm:col-span-3">
-                  <div className="mb-1.5 flex justify-between font-mono text-[11px]">
+                  <div className="mb-1.5 flex justify-between gap-2 font-mono text-[11px]">
                     <span className="text-muted-foreground">DOCUMENTOS</span>
                     <span
                       className={
@@ -164,7 +165,9 @@ function Dashboard() {
                             : "font-medium text-signal"
                       }
                     >
-                      {hasRequirement ? `${received}/${expected}` : "—"}
+                      {hasRequirement
+                        ? `${received}/${expected}`
+                        : `${totalDocs} recebido${totalDocs === 1 ? "" : "s"}`}
                     </span>
                   </div>
                   <div className="h-[3px] bg-line">
@@ -175,11 +178,16 @@ function Dashboard() {
                       />
                     ) : null}
                   </div>
+                  {!hasRequirement ? (
+                    <div className="mt-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {members} no elenco · {peopleWithDocs} com envio
+                    </div>
+                  ) : null}
                 </div>
                 <div className="sm:col-span-2">
                   {!hasRequirement ? (
-                    <span className="border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Sem exigência configurada
+                    <span className="border border-line px-2 py-1 font-mono text-[10px] uppercase leading-tight tracking-wider text-muted-foreground">
+                      Sem exigência
                     </span>
                   ) : done ? (
                     <span className="border border-ok px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-ok">
@@ -191,6 +199,7 @@ function Dashboard() {
                     </span>
                   )}
                 </div>
+
 
                 <div className="hidden text-right sm:col-span-1 sm:block">
                   <span className="font-mono text-[11px] text-muted-foreground group-hover:text-foreground">
