@@ -292,7 +292,9 @@ function ShowDetail() {
                       Adicione as pessoas do show
                     </p>
                   ) : null}
-                  {cast.map((m) => (
+                  {cast.map((m) => {
+                    const memberDocs = docs.filter((d) => d.cast_member_id === m.id).length;
+                    return (
                     <div key={m.id} className="flex flex-wrap items-center gap-3 border-b border-line py-3 last:border-b-0">
                       <div className="grid size-8 shrink-0 place-items-center border border-line font-mono text-[11px]">
                         {initials(m.name)}
@@ -321,8 +323,37 @@ function ShowDetail() {
                           );
                         })}
                       </div>
+                      <button
+                        title={
+                          memberDocs > 0
+                            ? `Não é possível excluir: ${memberDocs} documento${memberDocs === 1 ? "" : "s"} vinculado${memberDocs === 1 ? "" : "s"}`
+                            : "Remover do elenco"
+                        }
+                        onClick={() => {
+                          setActionError(null);
+                          if (memberDocs > 0) {
+                            setActionError(
+                              `${m.name} tem ${memberDocs} documento${memberDocs === 1 ? "" : "s"} enviado${memberDocs === 1 ? "" : "s"}. Exclua o${memberDocs === 1 ? "" : "s"} documento${memberDocs === 1 ? "" : "s"} antes de remover a pessoa.`,
+                            );
+                            return;
+                          }
+                          removeMember.mutate(m.id);
+                        }}
+                        className={
+                          memberDocs > 0
+                            ? "shrink-0 border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+                            : "shrink-0 border border-destructive px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-destructive hover:bg-destructive/10"
+                        }
+                      >
+                        Excluir
+                      </button>
                     </div>
-                  ))}
+                    );
+                  })}
+                  {actionError && !confirmDelete ? (
+                    <p className="pb-3 font-mono text-[11px] text-destructive">{actionError}</p>
+                  ) : null}
+
                 </div>
 
                 <form
