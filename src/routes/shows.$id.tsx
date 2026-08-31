@@ -511,3 +511,159 @@ function ShowDetail() {
     </AppShell>
   );
 }
+
+type EditableShow = {
+  id: string;
+  city: string;
+  venue: string | null;
+  show_date: string;
+  artist_id: string | null;
+  tour_id: string | null;
+  artists: { name: string } | null;
+  tours: { name: string } | null;
+};
+
+function EditShowForm({
+  show,
+  onCancel,
+  onSaved,
+}: {
+  show: EditableShow;
+  onCancel: () => void;
+  onSaved: () => void;
+}) {
+  const [artist, setArtist] = useState(show.artists?.name ?? "");
+  const [tour, setTour] = useState(show.tours?.name ?? "");
+  const [city, setCity] = useState(show.city);
+  const [date, setDate] = useState(show.show_date);
+  const [venue, setVenue] = useState(show.venue ?? "");
+  const [error, setError] = useState<string | null>(null);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Sessão expirada");
+
+      let artistId = show.artist_id;
+      if (artist.trim() && artist.trim() !== (show.artists?.name ?? "")) {
+        const { data: existing } = await supabase
+          .from("artists")
+          .select("id")
+          .eq("name", artist.trim())
+          .maybeSingle();
+        if (existing) {
+          artistId = existing.id;
+        } else {
+          const { data: created, error: artistError } = await supabase
+            .from("artists")
+            .insert({ name: artist.trim(), user_id: userId })
+            .select("id")
+            .single();
+          if (artistError) throw new Error(artistError.message);
+          artistId = created.id;
+        }
+      }
+
+      let tourId = show.tour_id;
+      const tourName = tour.trim();
+      if (tourName !== (show.tours?.name ?? "")) {
+        if (!tourName) {
+          tourId = null;
+        } else if (tourId) {
+          const { error: tourError } = await supabase
+            .from("tours")
+            .update({ name: tourName })
+            .eq("id", tourId);
+          if (tourError) throw new Error(tourError.message);
+        } else {
+          if (!artistId) throw new Error("Informe o artista para criar a tour");
+          const { data: createdTour, error: tourError } = await supabase
+            .from("tours")
+            .insert({ name: tourName, artist_id: artistId, user_id: userId })
+            .select("id")
+            .single();
+          if (tourError) throw new Error(tourError.message);
+          tourId = createdTour.id;
+        }
+      }
+
+      const { error: updateError } = await supabase
+        .from("shows")
+        .update({
+          artist_id: artistId,
+          tour_id: tourId,
+          city,
+          show_date: date,
+          venue: venue || null,
+        })
+        .eq("id", show.id);
+      if (updateError) throw new Error(updateError.message);
+    },
+    onSuccess: onSaved,
+    onError: (e: Error) => setError(e.message),
+  });
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        setError(null);
+        save.mutate();
+      }}
+      className="mt-6 grid grid-cols-1 gap-4 border border-line p-5 sm:grid-cols-2 lg:grid-cols-5"
+    >
+      <EditField label="Artista" value={artist} onChange={setArtist} required />
+      <EditField label="Tour (opcional)" value={tour} onChange={setTour} />
+      <EditField label="Cidade" value={city} onChange={setCity} required />
+      <EditField label="Data" value={date} onChange={setDate} type="date" required />
+      <EditField label="Local" value={venue} onChange={setVenue} />
+      <div className="sm:col-span-2 lg:col-span-5">
+        {error ? <p className="mb-2 font-mono text-[11px] text-destructive">{error}</p> : null}
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="submit"
+            disabled={save.isPending}
+            className="bg-signal px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-signal-foreground disabled:opacity-50"
+          >
+            Salvar alterações
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="border border-line px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] hover:bg-accent"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function EditField({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="label-mono">{label}</span>
+      <input
+        type={type}
+        required={required}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1.5 w-full border border-line bg-background px-3 py-2 text-sm outline-none focus:border-signal"
+      />
+    </label>
+  );
+}
