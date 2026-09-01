@@ -282,23 +282,36 @@ function DeleteButton({
 }) {
   const [warn, setWarn] = useState(false);
 
+  if (used > 0) {
+    return (
+      <div className="text-right">
+        <button
+          type="button"
+          onClick={() => setWarn(true)}
+          className="border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
+        >
+          Excluir
+        </button>
+        {warn ? (
+          <p className="mt-1 font-mono text-[10px] text-destructive">
+            Não é possível excluir: {blockedMessage}.
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="text-right">
-      <button
-        type="button"
-        onClick={() => (used > 0 ? setWarn(true) : onDelete())}
+      <ConfirmButton
+        onConfirm={onDelete}
         className="border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] transition-colors hover:border-destructive hover:text-destructive"
-      >
-        Excluir
-      </button>
-      {warn ? (
-        <p className="mt-1 font-mono text-[10px] text-destructive">
-          Não é possível excluir: {blockedMessage}.
-        </p>
-      ) : null}
+        confirmClassName="border border-destructive bg-destructive/10 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-destructive"
+      />
     </div>
   );
 }
+
 
 function CreateRow({
   placeholder,
