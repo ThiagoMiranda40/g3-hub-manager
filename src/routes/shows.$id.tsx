@@ -210,8 +210,16 @@ function ShowDetail() {
                     ? `${pendingPeople} pendentes`
                     : "tudo recebido"}
               </div>
-              <div className="mt-3 flex justify-end gap-2">
+              <div className="mt-3 flex flex-wrap justify-end gap-2">
+                <Link
+                  to="/shows/$id/ficha"
+                  params={{ id }}
+                  className="border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] hover:bg-accent"
+                >
+                  Ver ficha de produção
+                </Link>
                 <button
+
                   onClick={() => {
                     setEditing((v) => !v);
                     setConfirmDelete(false);
