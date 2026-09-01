@@ -323,30 +323,31 @@ function ShowDetail() {
                           );
                         })}
                       </div>
-                      <button
-                        title={
-                          memberDocs > 0
-                            ? `Não é possível excluir: ${memberDocs} documento${memberDocs === 1 ? "" : "s"} vinculado${memberDocs === 1 ? "" : "s"}`
-                            : "Remover do elenco"
-                        }
-                        onClick={() => {
-                          setActionError(null);
-                          if (memberDocs > 0) {
+                      {memberDocs > 0 ? (
+                        <button
+                          type="button"
+                          title={`Não é possível excluir: ${memberDocs} documento${memberDocs === 1 ? "" : "s"} vinculado${memberDocs === 1 ? "" : "s"}`}
+                          onClick={() =>
                             setActionError(
                               `${m.name} tem ${memberDocs} documento${memberDocs === 1 ? "" : "s"} enviado${memberDocs === 1 ? "" : "s"}. Exclua o${memberDocs === 1 ? "" : "s"} documento${memberDocs === 1 ? "" : "s"} antes de remover a pessoa.`,
-                            );
-                            return;
+                            )
                           }
-                          removeMember.mutate(m.id);
-                        }}
-                        className={
-                          memberDocs > 0
-                            ? "shrink-0 border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
-                            : "shrink-0 border border-destructive px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-destructive hover:bg-destructive/10"
-                        }
-                      >
-                        Excluir
-                      </button>
+                          className="shrink-0 border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+                        >
+                          Excluir
+                        </button>
+                      ) : (
+                        <ConfirmButton
+                          title="Remover do elenco"
+                          onConfirm={() => {
+                            setActionError(null);
+                            removeMember.mutate(m.id);
+                          }}
+                          className="shrink-0 border border-destructive px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-destructive hover:bg-destructive/10"
+                          confirmClassName="shrink-0 border border-destructive bg-destructive/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-destructive"
+                        />
+                      )}
+
                     </div>
                     );
                   })}
