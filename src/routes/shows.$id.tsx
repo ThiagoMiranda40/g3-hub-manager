@@ -449,7 +449,17 @@ function ShowDetail() {
                                   {formatBRL(Number(d.amount))}
                                 </span>
                               ) : null}
+                              <ConfirmButton
+                                title="Excluir documento"
+                                onConfirm={() =>
+                                  deleteDocument.mutate({ id: d.id, file_path: d.file_path })
+                                }
+                                label="Excluir"
+                                className={`${d.amount != null ? "" : "ml-auto "}shrink-0 border border-line px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:border-destructive hover:text-destructive`}
+                                confirmClassName="shrink-0 border border-destructive bg-destructive/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-destructive"
+                              />
                             </li>
+
                           ))}
                         </ul>
                       )}
