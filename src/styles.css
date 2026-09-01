@@ -126,3 +126,33 @@
   text-transform: uppercase;
   color: var(--color-muted-foreground);
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+  }
+
+  .print-sheet section,
+  .print-sheet header,
+  .print-sheet table,
+  .print-sheet tr {
+    break-inside: avoid;
+  }
+
+  .print-sheet h1 {
+    font-size: 22pt;
+  }
+
+  a[href]::after {
+    content: "";
+  }
+}
+
