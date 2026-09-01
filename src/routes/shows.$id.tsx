@@ -106,6 +106,22 @@ function ShowDetail() {
     onError: (e: Error) => setActionError(e.message),
   });
 
+  const deleteDocument = useMutation({
+    mutationFn: async (doc: { id: string; file_path: string }) => {
+      if (doc.file_path) await supabase.storage.from("documentos").remove([doc.file_path]);
+      const { error } = await supabase.from("documents").delete().eq("id", doc.id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      setActionError(null);
+      qc.invalidateQueries({ queryKey: ["show", id] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e: Error) => setActionError(e.message),
+  });
+
+
+
   const deleteShow = useMutation({
     mutationFn: async () => {
       const paths = (data?.docs ?? []).map((d) => d.file_path).filter(Boolean);
