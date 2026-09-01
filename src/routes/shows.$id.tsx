@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useSession";
 import { useCatalog } from "@/hooks/useCatalog";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmButton } from "@/components/ConfirmButton";
+
 import { computeShowProgress, formatBRL, initials, labelFrom } from "@/lib/g3";
 
 export const Route = createFileRoute("/shows/$id")({
@@ -104,6 +106,22 @@ function ShowDetail() {
     onError: (e: Error) => setActionError(e.message),
   });
 
+  const deleteDocument = useMutation({
+    mutationFn: async (doc: { id: string; file_path: string }) => {
+      if (doc.file_path) await supabase.storage.from("documentos").remove([doc.file_path]);
+      const { error } = await supabase.from("documents").delete().eq("id", doc.id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      setActionError(null);
+      qc.invalidateQueries({ queryKey: ["show", id] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e: Error) => setActionError(e.message),
+  });
+
+
+
   const deleteShow = useMutation({
     mutationFn: async () => {
       const paths = (data?.docs ?? []).map((d) => d.file_path).filter(Boolean);
@@ -192,8 +210,16 @@ function ShowDetail() {
                     ? `${pendingPeople} pendentes`
                     : "tudo recebido"}
               </div>
-              <div className="mt-3 flex justify-end gap-2">
+              <div className="mt-3 flex flex-wrap justify-end gap-2">
+                <Link
+                  to="/shows/$id/ficha"
+                  params={{ id }}
+                  className="border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] hover:bg-accent"
+                >
+                  Ver ficha de produção
+                </Link>
                 <button
+
                   onClick={() => {
                     setEditing((v) => !v);
                     setConfirmDelete(false);
@@ -323,30 +349,31 @@ function ShowDetail() {
                           );
                         })}
                       </div>
-                      <button
-                        title={
-                          memberDocs > 0
-                            ? `Não é possível excluir: ${memberDocs} documento${memberDocs === 1 ? "" : "s"} vinculado${memberDocs === 1 ? "" : "s"}`
-                            : "Remover do elenco"
-                        }
-                        onClick={() => {
-                          setActionError(null);
-                          if (memberDocs > 0) {
+                      {memberDocs > 0 ? (
+                        <button
+                          type="button"
+                          title={`Não é possível excluir: ${memberDocs} documento${memberDocs === 1 ? "" : "s"} vinculado${memberDocs === 1 ? "" : "s"}`}
+                          onClick={() =>
                             setActionError(
                               `${m.name} tem ${memberDocs} documento${memberDocs === 1 ? "" : "s"} enviado${memberDocs === 1 ? "" : "s"}. Exclua o${memberDocs === 1 ? "" : "s"} documento${memberDocs === 1 ? "" : "s"} antes de remover a pessoa.`,
-                            );
-                            return;
+                            )
                           }
-                          removeMember.mutate(m.id);
-                        }}
-                        className={
-                          memberDocs > 0
-                            ? "shrink-0 border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
-                            : "shrink-0 border border-destructive px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-destructive hover:bg-destructive/10"
-                        }
-                      >
-                        Excluir
-                      </button>
+                          className="shrink-0 border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+                        >
+                          Excluir
+                        </button>
+                      ) : (
+                        <ConfirmButton
+                          title="Remover do elenco"
+                          onConfirm={() => {
+                            setActionError(null);
+                            removeMember.mutate(m.id);
+                          }}
+                          className="shrink-0 border border-destructive px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-destructive hover:bg-destructive/10"
+                          confirmClassName="shrink-0 border border-destructive bg-destructive/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-destructive"
+                        />
+                      )}
+
                     </div>
                     );
                   })}
@@ -430,7 +457,17 @@ function ShowDetail() {
                                   {formatBRL(Number(d.amount))}
                                 </span>
                               ) : null}
+                              <ConfirmButton
+                                title="Excluir documento"
+                                onConfirm={() =>
+                                  deleteDocument.mutate({ id: d.id, file_path: d.file_path })
+                                }
+                                label="Excluir"
+                                className={`${d.amount != null ? "" : "ml-auto "}shrink-0 border border-line px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:border-destructive hover:text-destructive`}
+                                confirmClassName="shrink-0 border border-destructive bg-destructive/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-destructive"
+                              />
                             </li>
+
                           ))}
                         </ul>
                       )}
