@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useSession";
 import { useCatalog, catalogQueryKey } from "@/hooks/useCatalog";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmButton } from "@/components/ConfirmButton";
+
 import type { CastRole, DocumentType } from "@/lib/g3";
 
 export const Route = createFileRoute("/settings")({
