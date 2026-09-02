@@ -39,6 +39,9 @@ function Dashboard() {
   const { session, loading } = useSession();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [artistFilter, setArtistFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "complete">("all");
 
   useEffect(() => {
     if (!loading && !session) router.navigate({ to: "/auth" });
@@ -46,7 +49,6 @@ function Dashboard() {
 
   const enabled = !!session;
   const { docTypes } = useCatalog(enabled);
-  
 
   const { data } = useQuery({
     queryKey: ["dashboard"],
@@ -77,6 +79,24 @@ function Dashboard() {
 
   const complete = stats.filter((s) => s.progress.done).length;
   const pending = stats.filter((s) => s.progress.hasRequirement && !s.progress.done).length;
+
+  const artists = Array.from(
+    new Map(stats.map((s) => [s.show.artists?.name ?? "", s.show.artists?.name ?? ""])).entries(),
+  )
+    .map(([, name]) => name)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+  const filteredStats = stats.filter(({ show, progress }) => {
+    const text = `${show.city} ${show.venue ?? ""} ${show.artists?.name ?? ""}`.toLowerCase();
+    const matchesSearch = text.includes(search.trim().toLowerCase());
+    const matchesArtist = artistFilter === "all" || show.artists?.name === artistFilter;
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "pending" && progress.hasRequirement && !progress.done) ||
+      (statusFilter === "complete" && progress.done);
+    return matchesSearch && matchesArtist && matchesStatus;
+  });
 
 
   if (loading || !session) return null;
@@ -121,14 +141,61 @@ function Dashboard() {
 
         {open ? <NewShowForm onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["dashboard"] }); }} /> : null}
 
+        <div className="mb-6 grid grid-cols-1 gap-4 border border-line p-4 sm:grid-cols-12">
+          <div className="sm:col-span-5">
+            <label className="label-mono block">Buscar</label>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cidade, show ou artista"
+              className="mt-1.5 w-full border border-line bg-background px-3 py-2 text-sm outline-none focus:border-signal"
+            />
+          </div>
+          <div className="sm:col-span-4">
+            <label className="label-mono block">Artista</label>
+            <select
+              value={artistFilter}
+              onChange={(e) => setArtistFilter(e.target.value)}
+              className="mt-1.5 w-full border border-line bg-background px-3 py-2 text-sm outline-none focus:border-signal"
+            >
+              <option value="all">Todos</option>
+              {artists.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="sm:col-span-3">
+            <label className="label-mono block">Status</label>
+            <div className="mt-1.5 flex">
+              {(["all", "pending", "complete"] as const).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setStatusFilter(key)}
+                  className={`flex-1 border px-2 py-2 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+                    statusFilter === key
+                      ? "border-foreground bg-foreground text-background"
+                      : "border-line bg-background text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {key === "all" ? "Todos" : key === "pending" ? "Pendentes" : "Completos"}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="border-t border-line">
-          {stats.length === 0 ? (
+          {filteredStats.length === 0 ? (
             <p className="py-10 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              Nenhum show cadastrado ainda
+              {stats.length === 0 ? "Nenhum show cadastrado ainda" : "Nenhum show encontrado para os filtros selecionados"}
             </p>
           ) : null}
 
-          {stats.map(({ show, progress }) => {
+          {filteredStats.map(({ show, progress }) => {
             const { hasRequirement, expected, received, pct, done, totalDocs, peopleWithDocs, members } =
               progress;
             return (
