@@ -51,7 +51,7 @@ function Dashboard() {
   const enabled = !!session;
   const { docTypes } = useCatalog(enabled);
 
-  const { data } = useQuery({
+  const { data, isLoading: isLoadingDashboard } = useQuery({
     queryKey: ["dashboard"],
     enabled,
     queryFn: async () => {
