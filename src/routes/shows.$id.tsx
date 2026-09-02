@@ -52,7 +52,7 @@ function ShowDetail() {
     if (!role && roles[0]) setRole(roles[0].id);
   }, [role, roles]);
 
-  const { data } = useQuery({
+  const { data, isLoading: isLoadingShow } = useQuery({
     queryKey: ["show", id],
     enabled: !!session,
     queryFn: async () => {
