@@ -6,6 +6,7 @@ import { useSession } from "@/hooks/useSession";
 import { useCatalog } from "@/hooks/useCatalog";
 import { AppShell } from "@/components/AppShell";
 import { ConfirmButton } from "@/components/ConfirmButton";
+import { Skeleton } from "@/components/Skeleton";
 
 import { computeShowProgress, formatBRL, initials, labelFrom } from "@/lib/g3";
 
