@@ -111,7 +111,7 @@ function Dashboard() {
   }
 
   return (
-    <AppShell email={session.user.email}>
+    <AppShell email={session?.user.email}>
       <section className="grid grid-cols-1 items-end gap-6 border-b border-line pb-8 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <p className="label-mono">(a) Agenda de produção</p>
