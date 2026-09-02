@@ -2,7 +2,7 @@
 
 Crie o Aplicativo Web Responsivo conforme o PRD anexo
 
-This project was built with [Lovable](https://lovable.dev).
+O protótipo deste aplicativo foi criado com [Lovable](https://lovable.dev).
 
 ## Build with Lovable
 
