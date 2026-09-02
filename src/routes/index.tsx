@@ -100,7 +100,15 @@ function Dashboard() {
   });
 
 
-  if (loading || !session) return null;
+  if (!loading && !session) return null;
+
+  if (loading || isLoadingDashboard || !data) {
+    return (
+      <AppShell email={session?.user.email}>
+        <DashboardSkeleton />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell email={session.user.email}>
