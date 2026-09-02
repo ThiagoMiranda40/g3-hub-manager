@@ -6,6 +6,7 @@ import { useSession } from "@/hooks/useSession";
 import { useCatalog } from "@/hooks/useCatalog";
 import { AppShell } from "@/components/AppShell";
 import { ConfirmButton } from "@/components/ConfirmButton";
+import { Skeleton } from "@/components/Skeleton";
 
 import { computeShowProgress, formatBRL, initials, labelFrom } from "@/lib/g3";
 
@@ -51,7 +52,7 @@ function ShowDetail() {
     if (!role && roles[0]) setRole(roles[0].id);
   }, [role, roles]);
 
-  const { data } = useQuery({
+  const { data, isLoading: isLoadingShow } = useQuery({
     queryKey: ["show", id],
     enabled: !!session,
     queryFn: async () => {

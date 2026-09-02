@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useSession";
 import { AppShell } from "@/components/AppShell";
+import { Skeleton } from "@/components/Skeleton";
 import { computeShowProgress, formatShowDate, formatWeekday } from "@/lib/g3";
 import { useCatalog } from "@/hooks/useCatalog";
 
@@ -50,7 +51,7 @@ function Dashboard() {
   const enabled = !!session;
   const { docTypes } = useCatalog(enabled);
 
-  const { data } = useQuery({
+  const { data, isLoading: isLoadingDashboard } = useQuery({
     queryKey: ["dashboard"],
     enabled,
     queryFn: async () => {
@@ -99,10 +100,18 @@ function Dashboard() {
   });
 
 
-  if (loading || !session) return null;
+  if (!loading && !session) return null;
+
+  if (loading || isLoadingDashboard || !data) {
+    return (
+      <AppShell email={session?.user.email}>
+        <DashboardSkeleton />
+      </AppShell>
+    );
+  }
 
   return (
-    <AppShell email={session.user.email}>
+    <AppShell email={session?.user.email}>
       <section className="grid grid-cols-1 items-end gap-6 border-b border-line pb-8 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <p className="label-mono">(a) Agenda de produção</p>
@@ -390,5 +399,83 @@ function Field({
         className="mt-1.5 w-full border border-line bg-background px-3 py-2 text-sm outline-none focus:border-signal"
       />
     </label>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <>
+      <section className="grid grid-cols-1 items-end gap-6 border-b border-line pb-8 lg:grid-cols-12">
+        <div className="lg:col-span-7">
+          <Skeleton className="h-3 w-48" />
+          <Skeleton className="mt-4 h-14 w-full max-w-md" />
+          <Skeleton className="mt-3 h-14 w-full max-w-sm" />
+        </div>
+        <div className="grid grid-cols-3 gap-px self-end border border-line bg-line lg:col-span-5">
+          <div className="bg-background p-4">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="mt-3 h-9 w-12" />
+          </div>
+          <div className="bg-background p-4">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="mt-3 h-9 w-12" />
+          </div>
+          <div className="bg-background p-4">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="mt-3 h-9 w-12" />
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="h-9 w-28" />
+        </div>
+
+        <div className="mb-6 grid grid-cols-1 gap-4 border border-line p-4 sm:grid-cols-12">
+          <div className="sm:col-span-5">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="mt-3 h-10 w-full" />
+          </div>
+          <div className="sm:col-span-4">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="mt-3 h-10 w-full" />
+          </div>
+          <div className="sm:col-span-3">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="mt-3 h-10 w-full" />
+          </div>
+        </div>
+
+        <div className="border-t border-line">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="grid grid-cols-1 items-center gap-3 border-b border-line py-5 sm:grid-cols-12 sm:gap-6"
+            >
+              <div className="sm:col-span-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="mt-2 h-3 w-20" />
+              </div>
+              <div className="sm:col-span-4">
+                <Skeleton className="h-7 w-40" />
+                <Skeleton className="mt-2 h-3 w-32" />
+              </div>
+              <div className="sm:col-span-3">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="mt-3 h-[3px] w-full" />
+              </div>
+              <div className="sm:col-span-2">
+                <Skeleton className="h-6 w-24" />
+              </div>
+              <div className="hidden sm:col-span-1 sm:block">
+                <Skeleton className="ml-auto h-3 w-12" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
   );
 }
