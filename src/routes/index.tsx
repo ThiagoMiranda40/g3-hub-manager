@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/useSession";
 import { AppShell } from "@/components/AppShell";
+import { Skeleton } from "@/components/Skeleton";
 import { computeShowProgress, formatShowDate, formatWeekday } from "@/lib/g3";
 import { useCatalog } from "@/hooks/useCatalog";
 
