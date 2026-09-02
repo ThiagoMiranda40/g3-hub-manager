@@ -39,6 +39,9 @@ function Dashboard() {
   const { session, loading } = useSession();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [artistFilter, setArtistFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "complete">("all");
 
   useEffect(() => {
     if (!loading && !session) router.navigate({ to: "/auth" });
@@ -46,7 +49,6 @@ function Dashboard() {
 
   const enabled = !!session;
   const { docTypes } = useCatalog(enabled);
-  
 
   const { data } = useQuery({
     queryKey: ["dashboard"],
@@ -77,6 +79,24 @@ function Dashboard() {
 
   const complete = stats.filter((s) => s.progress.done).length;
   const pending = stats.filter((s) => s.progress.hasRequirement && !s.progress.done).length;
+
+  const artists = Array.from(
+    new Map(stats.map((s) => [s.show.artists?.name ?? "", s.show.artists?.name ?? ""])).entries(),
+  )
+    .map(([, name]) => name)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+  const filteredStats = stats.filter(({ show, progress }) => {
+    const text = `${show.city} ${show.venue ?? ""} ${show.artists?.name ?? ""}`.toLowerCase();
+    const matchesSearch = text.includes(search.trim().toLowerCase());
+    const matchesArtist = artistFilter === "all" || show.artists?.name === artistFilter;
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "pending" && progress.hasRequirement && !progress.done) ||
+      (statusFilter === "complete" && progress.done);
+    return matchesSearch && matchesArtist && matchesStatus;
+  });
 
 
   if (loading || !session) return null;
