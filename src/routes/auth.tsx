@@ -1,7 +1,6 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { useSession } from "@/hooks/useSession";
 
 export const Route = createFileRoute("/auth")({
@@ -57,11 +56,9 @@ function AuthPage() {
       return;
     }
     if (data.session) {
-      // E-mail confirmation is disabled on this project: already logged in.
       setBusy(false);
       return;
     }
-    // E-mail confirmation is enabled: no session yet, user must confirm first.
     setInfo("Conta criada! Verifique seu e-mail para confirmar o acesso antes de entrar.");
     setMode("signin");
     setBusy(false);
@@ -69,15 +66,13 @@ function AuthPage() {
 
   async function google() {
     setError(null);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/` },
     });
-    if (result.error) {
-      setError("Não foi possível entrar com o Google.");
-      return;
-    }
-    if (result.redirected) return;
-    router.navigate({ to: "/" });
+    if (error) setError("Não foi possível entrar com o Google.");
+    // Em caso de sucesso, o navegador é redirecionado pro Google agora —
+    // nenhum código depois daqui roda nessa página.
   }
 
   return (
