@@ -26,6 +26,7 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const router = useRouter();
   const { session } = useSession();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -42,8 +43,27 @@ function AuthPage() {
     setError(null);
     setInfo(null);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setError(error.message);
+    if (mode === "signin") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setError(error.message);
+      setBusy(false);
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      setError(error.message);
+      setBusy(false);
+      return;
+    }
+    if (data.session) {
+      // E-mail confirmation is disabled on this project: already logged in.
+      setBusy(false);
+      return;
+    }
+    // E-mail confirmation is enabled: no session yet, user must confirm first.
+    setInfo("Conta criada! Verifique seu e-mail para confirmar o acesso antes de entrar.");
+    setMode("signin");
     setBusy(false);
   }
 
@@ -63,7 +83,7 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen place-items-center px-4 py-12">
       <div className="w-full max-w-sm">
-        <p className="label-mono">Acesso restrito · administração</p>
+        <p className="label-mono">Acesso de administração</p>
         <h1 className="mt-2 font-display text-5xl leading-[0.9]">G3 HUB MANAGER</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Prancheta de turnê: elenco, documentos e pendências de cada show.
@@ -106,7 +126,7 @@ function AuthPage() {
             disabled={busy}
             className="w-full bg-foreground py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-background transition-colors hover:bg-signal disabled:opacity-50"
           >
-            Entrar
+            {mode === "signin" ? "Entrar" : "Criar conta"}
           </button>
 
           <button
@@ -117,9 +137,17 @@ function AuthPage() {
             Entrar com Google
           </button>
 
-          <p className="pt-1 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            Acesso somente para o administrador
-          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setInfo(null);
+              setMode((m) => (m === "signin" ? "signup" : "signin"));
+            }}
+            className="w-full pt-1 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {mode === "signin" ? "Não tem conta? Criar conta" : "Já tem conta? Entrar"}
+          </button>
         </form>
       </div>
     </div>
