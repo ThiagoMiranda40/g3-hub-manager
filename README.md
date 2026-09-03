@@ -2,15 +2,8 @@
 
 Crie o Aplicativo Web Responsivo conforme o PRD anexo
 
-O protótipo deste aplicativo foi criado com [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/82ea76f3-c572-4b7d-b904-4007c756e903).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+O protótipo deste aplicativo foi criado inicialmente com [Lovable](https://lovable.dev).
+Depois de algumas rodadas de iteração o projeto foi migrado para servidor externo Cloudflare Pages, sincronizado ao repositório do GitHub, credenciais proprias do Supabase e continuidade no desenvolvimento via Agente Google Antigravity usando SDD como método para o MVP.
 
 ## Development
 
