@@ -1,4 +1,4 @@
-# Responsive Web App
+# Hub Manager Tour
 
 Crie o Aplicativo Web Responsivo conforme o PRD anexo
 
