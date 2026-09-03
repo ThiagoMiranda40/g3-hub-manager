@@ -9,13 +9,13 @@ import { computeShowProgress, formatBRL, labelFrom } from "@/lib/g3";
 export const Route = createFileRoute("/shows/$id_/ficha")({
   head: () => ({
     meta: [
-      { title: "Ficha de produção — G3 Hub Manager" },
+      { title: "Ficha de produção — Hub Manager Tour" },
       {
         name: "description",
         content:
           "Ficha de produção do show: elenco por função, documentos recebidos por tipo e resumo de reembolsos, pronta para impressão.",
       },
-      { property: "og:title", content: "Ficha de produção — G3 Hub Manager" },
+      { property: "og:title", content: "Ficha de produção — Hub Manager Tour" },
       {
         property: "og:description",
         content: "Resumo imprimível do show: elenco, documentos e reembolsos.",
@@ -115,7 +115,7 @@ function FichaProducao() {
       ) : (
         <article className="print-sheet">
           <header className="border-b-2 border-foreground pb-4">
-            <p className="label-mono">Ficha de produção · G3 Hub Manager</p>
+            <p className="label-mono">Ficha de produção · Hub Manager Tour</p>
             <h1 className="mt-2 text-4xl leading-none">{show.artists?.name ?? "SEM ARTISTA"}</h1>
             <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
               <Info label="Tour" value={show.tours?.name ?? "Show avulso"} />

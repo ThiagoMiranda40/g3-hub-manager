@@ -6,16 +6,16 @@ import { useSession } from "@/hooks/useSession";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Entrar — G3 Hub Manager" },
+      { title: "Entrar — Hub Manager Tour" },
       {
         name: "description",
         content:
-          "Acesso do administrador do G3 Hub Manager para gerenciar shows, elenco e documentos de turnê.",
+          "Acesso do administrador do Hub Manager Tour para gerenciar shows, elenco e documentos de turnê.",
       },
-      { property: "og:title", content: "Entrar — G3 Hub Manager" },
+      { property: "og:title", content: "Entrar — Hub Manager Tour" },
       {
         property: "og:description",
-        content: "Acesso do administrador do G3 Hub Manager para gerenciar a logística de turnê.",
+        content: "Acesso do administrador do Hub Manager Tour para gerenciar a logística de turnê.",
       },
     ],
   }),
@@ -78,11 +78,13 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen place-items-center px-4 py-12">
       <div className="w-full max-w-sm">
-        <p className="label-mono">Acesso de administração</p>
-        <h1 className="mt-2 font-display text-5xl leading-[0.9]">G3 HUB MANAGER</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Prancheta de turnê: elenco, documentos e pendências de cada show.
-        </p>
+        <div className="text-center">
+          <p className="label-mono">Acesso de administração</p>
+          <h1 className="mt-2 font-display text-4xl sm:text-5xl leading-[0.9]">HUB MANAGER TOUR</h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            O seu Hub de Gerenciamento de Turnês
+          </p>
+        </div>
 
         <form onSubmit={submit} className="mt-8 space-y-4 border border-line p-5">
           <div>

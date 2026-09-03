@@ -9,13 +9,13 @@ import { ALLOWED_EXTENSIONS, MAX_UPLOAD_BYTES } from "@/lib/g3";
 export const Route = createFileRoute("/p/$token")({
   head: () => ({
     meta: [
-      { title: "Enviar documento — G3 Hub Manager" },
+      { title: "Enviar documento — Hub Manager Tour" },
       {
         name: "description",
         content:
           "Envie sua passagem, voucher de hotel ou nota fiscal para a produção do show. Sem cadastro, sem login.",
       },
-      { property: "og:title", content: "Enviar documento — G3 Hub Manager" },
+      { property: "og:title", content: "Enviar documento — Hub Manager Tour" },
       {
         property: "og:description",
         content: "Envio de passagem, hotel ou nota fiscal para a produção do show.",
