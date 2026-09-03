@@ -11,13 +11,13 @@ import { useCatalog } from "@/hooks/useCatalog";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Prancheta de Turnê — Hub Manager Tour" },
+      { title: "Hub Manager Tour — Gerenciamento de Turnês" },
       {
         name: "description",
         content:
           "Agenda de shows com status de documentos: veja num relance quem já enviou passagem, hotel e nota, e quem ainda falta.",
       },
-      { property: "og:title", content: "Prancheta de Turnê — Hub Manager Tour" },
+      { property: "og:title", content: "Hub Manager Tour — Gerenciamento de Turnês" },
       {
         property: "og:description",
         content: "Agenda de shows com status de documentos da produção de turnê.",
