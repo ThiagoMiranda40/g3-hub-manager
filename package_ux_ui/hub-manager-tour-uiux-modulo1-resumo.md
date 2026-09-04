@@ -1,43 +1,86 @@
 # UI/UX — Módulo 1 V1 (Hub Manager Tour)
 
-> Entregável de handoff para a `sdd-produto-digital`. Passo 9 (revisão de handoff externo) foi aplicado no refino feito pelo Claude Design — o pacote final já incorpora as três correções encontradas nessa revisão (estado "sem exigência configurada", interação de sinalizar exceção com nota, e movimento/transições).
+> Entregável de handoff para a `sdd-produto-digital`. Passo 9 (revisão de handoff externo) e Pente Fino de Usabilidade aplicados: o pacote final incorpora o sistema visual definitivo "Nocturne", calibrado contra as 10 Heurísticas de Nielsen e acessibilidade WCAG 2.2 AA.
 
 ## Personas (herdadas do PRD)
-Administrador (logado), Pessoa do elenco/equipe (sem conta, acessa por link), Casa de show/promotor (sem conta, acessa por link do rider — perfil novo).
+1. **Administrador de Produção (logado)**: Jeff e produtores — gerenciam catálogo de pessoas, artistas, shows, exigências, rider técnico e reembolsos.
+2. **Pessoa do elenco/equipe (sem conta, acesso por link seguro)**: Integrantes e técnicos — acessam para verificar pendências pessoais e enviar documentos/comprovantes.
+3. **Casa de show / promotor local (sem conta, acesso por link seguro do rider)**: Gerentes e técnicos das casas de evento — confirmam o atendimento técnico ou sinalizam exceções.
 
-## Fluxos mapeados
-1. Administrador cadastra show → elenco sugerido automaticamente → confirma/ajusta → define exigência por pessoa → rider padrão sugerido → ajusta se necessário → show pronto (dois links gerados).
-2. Pessoa acessa link do show → seleciona nome → escolhe tipo de documento → anexa arquivo → marca reembolso se aplicável → confirmação visual. Estados de erro (link inválido) e vazio cobertos.
-3. Casa de show acessa link do rider → confirma ou sinaliza exceção item a item (com nota, capturada em campo de texto revelado ao clicar) → status reflete no painel do administrador. Estado vazio (rider não configurado) coberto.
+---
 
-## Arquitetura de informação
-Agenda → Show (Elenco, Documentos, Rider, Reembolsos, Ficha de Produção) → Configurações (Funções, Tipos de documento, Rider padrão por artista). Dois pontos de acesso público sem login: envio de documento e confirmação de rider, ambos por show.
+## Fluxos Mapeados e Refinamentos de Usabilidade (Pente Fino)
 
-## Componentes nomeados
-- **Átomos**: botão primário, botão secundário (contorno), badge de status (confirmado / pendente / exceção / sem exigência — quatro estados, não três), campo de upload, campo de texto longo (nota de exceção).
-- **Moléculas**: linha de pessoa, linha de documento, linha de item de rider.
-- **Organismos**: card de elenco, card de documentos, card de rider, card de reembolsos — todos construídos sobre o mesmo "card de lista".
+1. **Montagem de Show e Exigências em Lote:**
+   - Ao cadastrar show, o elenco sugerido é carregado automaticamente com base nos vínculos de artista e equipe geral.
+   - O produtor conta com **presets em lote** (ex.: "Aplicar Passagem + Hotel para toda a banda" com 1 clique), eliminando cliques repetitivos.
+   - Contadores discriminam claramente: ativos (concluídos vs pendentes) e pessoas sem exigência nesta data.
+2. **Envio Público do Integrante com Checklist Dinâmica (`/p/$token`):**
+   - O integrante seleciona seu nome e visualiza instantaneamente sua **checklist pessoal dinâmica**:
+     - Itens já entregues: badge verde "Recebido", com nome do arquivo e data (evita envio duplex).
+     - Itens pendentes: botão de anexo direto.
+   - Opção de marcar "Solicitar reembolso deste item" informando o valor em R$.
+3. **Confirmação do Rider com Auto-Save e Impressão Local (`/r/$token`):**
+   - A casa de show confirma item a item ou sinaliza exceções com justificativa.
+   - **Auto-save visível em tempo real** com indicador de timestamp ("Salvo às HH:MM").
+   - **Reversibilidade imediata**: clicar de volta em "Confirmar" reverte o status de exceção sem travas.
+   - Botão "Imprimir cópia de atendimento": gera via física limpa para o operador local de palco.
+4. **Liquidação Ágil de Reembolsos com Chave Pix:**
+   - O cadastro de pessoas guarda Chave Pix (`pix_type`, `pix_key`).
+   - Na aba de Reembolsos do show, o produtor tem botão de 1 toque **"Copiar Pix"** e switch para marcar "Reembolsado".
+5. **Conferência Presencial de Palco ("Modo Palco"):**
+   - No dia do show, a aba de Rider oferece visualização mobile com cards amplos e botões grandes de polegar (>= 48px: "OK Recebido" / "Divergência") para operar em palco com luz baixa.
 
-## Regras de negócio que a interface precisa preservar
-- Pendência é sempre por **pessoa + show**, nunca um status único da pessoa sem indicar a qual show pertence.
-- O estado "sem exigência configurada" é visualmente distinto de "pendente" (hoje: texto itálico sem badge colorido, diferente das pills usadas nos outros três estados) — não pode virar um "pendente" disfarçado.
-- Reembolso é marcado no momento do envio pela própria pessoa, não pré-configurado pelo tipo de documento.
+---
 
-## Decisões de acessibilidade (WCAG 2.2, nível AA)
-Status nunca depende só de cor (sempre acompanhado de ícone + texto). Todo campo com rótulo visível, não só placeholder. Ordem de navegação por teclado segue a ordem visual. Mensagens de erro descrevem o quê e como corrigir.
+## Arquitetura de Informação
+- **Agenda** (`/`) → **Show** (`/shows/$id`):
+  - Aba 1: Elenco & Exigências (com presets em lote).
+  - Aba 2: Documentos Recebidos.
+  - Aba 3: Rider Técnico (com alternância para "Modo Palco").
+  - Aba 4: Reembolsos (com somatório financeiro e cópia de Pix).
+  - Aba 5: Ficha de Produção (formatação limpa para impressão A4).
+- **Pessoas & Equipe** (`/people`): Catálogo centralizado de integrantes, contatos, Pix e vínculos.
+- **Configurações** (`/settings`): Tipos de documento, funções e Rider Padrão por Artista.
+- **Rotas Públicas Sem Login**:
+  - `📱 /p/$token`: Envio de documentos com checklist pessoal.
+  - `🏛️ /r/$token`: Confirmação técnica pela casa de show com auto-save.
 
-## Decisões conscientes de não-escopo (V1)
-Sem atalho de teclado dedicado. Sem "desfazer" pós-exclusão (mitigado por confirmação prévia já existente). Sem seção de ajuda formal (telas autoexplicativas pelo rótulo).
+---
 
-## Sistema visual final — direção "Nocturne"
-Escolhida entre 7 direções exploradas pelo Claude Design (2 sistemas, "Turno 1" e "Turno 2"). Características: acento roxo/lilás único, tema claro e escuro com alternância suave, tipografia Inter, ícones Phosphor, cantos de 8–14px, hairlines em vez de sombra pesada. Tokens completos de cor, espaçamento e componente vivem no design system embutido no artefato final (ver Artefatos abaixo) — não duplicar aqui, referenciar o arquivo.
+## Componentes Nomeados (Atomic Design)
+- **Átomos**:
+  - Botão Primário (com micro-scale no clique: 0.98), Botão Secundário (outline), Botão de Ação Rápida ("Copiar Pix", "Preset").
+  - Badge de Status (4 estados): `Confirmado` (verde), `Pendente` (amarelo/alerta), `Exceção` (roxo/alerta) e `Sem exigência configurada` (texto itálico sutil sem badge colorido).
+  - Campo de Upload com preview, Campo de Nota Expansível.
+- **Moléculas**:
+  - Linha de Integrante com badges de exigência, Linha de Item de Rider com botões Confirmar/Exceção, Card de Checklist Pessoal.
+- **Organismos**:
+  - Card de Elenco com cabeçalho discriminado, Card de Reembolsos com totalizador e Pix, Painel de Rider Categorizado, Cards de Compartilhamento de Links com toasts semânticos.
 
-## Movimento (adicionado na correção do Passo 9)
-Transição de 0.18s em hover de card/botão (cor de fundo, borda, sombra, transform). Feedback de clique nos botões primários (leve encolhimento). Animação de entrada (`fade + slide-up`, 0.18s) na revelação do campo de nota de exceção e nas trocas de tela.
+---
 
-## Artefatos do pacote final
-- `Hub Manager Tour (standalone).html` — o artefato de alta fidelidade definitivo, autocontido (design system, fontes e ícones embutidos), já com as três correções do Passo 9 aplicadas. Esta é a fonte de verdade visual para a SDD referenciar em `plan.md`.
-- `hub-manager-tour-uiux-modulo1.jsx` — rascunho estrutural inicial (paleta âmbar, anterior à escolha do Claude Design); mantido só como referência histórica de conteúdo/campos, não de estilo.
+## Decisões de Acessibilidade (WCAG 2.2, Nível AA)
+1. **Calibração de Contraste no Sistema Nocturne:**
+   - No tema escuro (`#161826`), o acento lilás `#9184d9` atinge ratio ~6.5:1 (aprovado).
+   - No tema claro, textos interativos e ícones utilizam a variante profunda `#5f4eb8` (ratio > 5.5:1), garantindo conformidade estrita com o critério 1.4.3 do WCAG AA.
+2. **Operabilidade e Touch Targets:**
+   - Todos os botões e interações touch em ambiente mobile (upload e confirmação do rider) possuem altura mínima de 48px.
+3. **Informação Multissensorial:**
+   - Status nunca dependem apenas de cor; são sempre acompanhados de ícones distintos e rótulos textuais visíveis.
+4. **Mensagens e Feedbacks com ARIA:**
+   - Indicador de auto-save e toasts de cópia utilizam `aria-live="polite"`.
 
-## Pendência conhecida, não bloqueante
-Nenhuma identificada nesta revisão além do que já está registrado no PRD (extração de documento por IA como stretch da Fase 1, login Google já corrigido).
+---
+
+## Sistema Visual — Direção "Nocturne"
+- Acento roxo/lilás único (`#9184d9` dark / `#5f4eb8` light).
+- Tipografia: Inter (títulos e corpo) com JetBrains Mono para códigos/tokens/valores.
+- Cantos arredondados de 8px a 14px, hairlines e elevações sutis em vez de sombras pesadas.
+- Microinterações de 0.18s em hover/clique e transição `fade + slide-up (0.18s)` na revelação de campos.
+
+---
+
+## Artefatos do Pacote
+- `Hub Manager Tour (standalone).html`: Fonte de verdade visual de alta fidelidade do Claude Design.
+- `specs/001-modulo-1-v1/`: Especificação técnica completa (spec.md, plan.md, data-model.md, tasks.md).

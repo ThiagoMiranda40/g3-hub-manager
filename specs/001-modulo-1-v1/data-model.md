@@ -4,10 +4,11 @@
 
 O modelo de dados do Hub Manager Tour segue o padrão relacional em **Terceira Forma Normal (3NF)** no PostgreSQL (Supabase), com integridade referencial estrita, chaves estrangeiras explícitas, constraints de unicidade (`UNIQUE`) para garantia atômica contra concorrência e Row Level Security (RLS) habilitado em 100% das tabelas.
 
-### Problemas estruturais do protótipo resolvidos nesta versão:
-1. **Pessoas e Elenco**: No protótipo, a tabela `cast_members` continha apenas `(show_id, name, role)`. A cada novo show, as mesmas pessoas eram redigitadas, impossibilitando manter contatos permanentes, histórico e vínculos de equipe. Agora, a entidade central é `people`, cadastrada uma única vez pelo administrador, com tabela associativa `person_artists` para definir se a pessoa atua com artistas específicos ou integra a "equipe geral". O elenco de um show referencia a pessoa permanente (`person_id`) ou permite membros pontuais daquela data.
-2. **Exigência de Documentos**: No protótipo, `document_types` possuía `required boolean` global. No V1, a regra de negócio validada em produção exige que a obrigatoriedade seja individualizada por **pessoa + show + tipo de documento**. A tabela `show_requirements` materializa essa relação, permitindo prazo (`deadline_date`) e cancelamento de exigência sem apagar o tipo de documento.
-3. **Rider Técnico Digital**: Introdução das entidades `artist_rider_template_items` (o catálogo padrão do artista) e `show_rider_items` (a instância do rider para um show específico, com status de confirmação pública da casa de show, nota de exceção e conferência física pós-show).
+### Problemas estruturais do protótipo e refinamentos de UI/UX resolvidos nesta versão:
+1. **Pessoas e Elenco**: A entidade central é `people`, cadastrada uma única vez pelo administrador, com tabela associativa `person_artists` para definir vínculos com artistas específicos ou com a "equipe geral". Inclui dados práticos de pagamento (`pix_key`, `pix_type`) para agilizar o fluxo operacional de reembolsos.
+2. **Exigência de Documentos**: A regra de negócio é individualizada por **pessoa + show + tipo de documento** através da tabela `show_requirements`, permitindo prazos (`deadline_date`), presets em lote e estado formal "sem exigência configurada".
+3. **Reembolsos Operacionais**: Em `documents`, além do valor (`amount`) e do flag de solicitação (`is_reimbursement`), adicionamos controle de liquidação (`is_reimbursed`, `reimbursed_at`) para que o produtor marque o reembolso como pago com 1 clique após copiar o Pix.
+4. **Rider Técnico Digital**: Introdução das entidades `artist_rider_template_items` (o catálogo padrão do artista) e `show_rider_items` (a instância do rider para o show específico com auto-save, reversão de status, nota de exceção e conferência presencial de palco).
 
 ---
 
@@ -29,7 +30,7 @@ auth.users (Administrador)
   │                                 │
   │                                 ├──► public.show_requirements (Exigência individual)
   │                                 │
-  │                                 └──► public.documents (Comprovantes / Anexos)
+  │                                 └──► public.documents (Comprovantes / Reembolsos / Pix)
   │
   └───────────────────────────────► public.show_rider_items (Instância do Rider do Show)
 ```
@@ -48,13 +49,16 @@ Armazena o cadastro único de integrantes e profissionais de produção sob a co
 | `name` | `text` | `NOT NULL` | Nome completo do integrante |
 | `phone` | `text` | `NULL` | Telefone com DDD (ex: +55 11 99999-9999) |
 | `email` | `text` | `NULL` | E-mail de contato |
+| `pix_type` | `text` | `NULL` | Tipo de chave Pix ('cpf', 'email', 'phone', 'random') |
+| `pix_key` | `text` | `NULL` | Chave Pix para liquidação de reembolsos |
 | `default_role_id` | `uuid` | `NULL REFERENCES public.cast_roles ON DELETE SET NULL` | Função habitual (Músico, Técnico, etc.) |
-| `notes` | `text` | `NULL` | Observações gerais (ex: tamanho de camiseta, restrições) |
+| `notes` | `text` | `NULL` | Observações gerais (tamanho de camisa, restrições) |
 | `created_at` | `timestamptz`| `NOT NULL DEFAULT now()` | Data de criação do registro |
 | `updated_at` | `timestamptz`| `NOT NULL DEFAULT now()` | Data da última alteração |
 
 **Constraints:**
 - `UNIQUE(user_id, name)` — Impede nomes duplicados no catálogo do mesmo produtor.
+- `CHECK (pix_type IS NULL OR pix_type IN ('cpf', 'email', 'phone', 'random'))`
 
 ---
 
@@ -71,13 +75,13 @@ Define a qual(is) artista(s) a pessoa está vinculada ou se integra a equipe ger
 | `created_at` | `timestamptz`| `NOT NULL DEFAULT now()` | Data de vinculação |
 
 **Constraints:**
-- `CHECK ((artist_id IS NOT NULL AND is_general_crew = false) OR (artist_id IS NULL AND is_general_crew = true))` — Garante consistência lógica: ou pertence a um artista específico, ou é equipe geral.
-- `UNIQUE(user_id, person_id, artist_id)` — Impede vínculo duplicado para o mesmo artista.
+- `CHECK ((artist_id IS NOT NULL AND is_general_crew = false) OR (artist_id IS NULL AND is_general_crew = true))`
+- `UNIQUE(user_id, person_id, artist_id)`
 
 ---
 
 ### 3.3 `public.shows` (Atualização de Schema)
-Representa a data de show da turnê. Mantém o `public_token` para envio de documentos e adiciona `rider_public_token` exclusivo para a casa de show.
+Representa a data de show da turnê. Contém os dois tokens públicos exclusivos e independentes.
 
 | Coluna | Tipo | Modificadores | Descrição |
 |---|---|---|---|
@@ -88,8 +92,8 @@ Representa a data de show da turnê. Mantém o `public_token` para envio de docu
 | `city` | `text` | `NOT NULL` | Cidade da apresentação |
 | `show_date` | `date` | `NOT NULL` | Data do show |
 | `venue` | `text` | `NULL` | Casa de show, teatro ou praça |
-| `public_token` | `text` | `NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(9), 'hex')` | Token público para envio de docs |
-| `rider_public_token` | `text` | `NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(9), 'hex')` | Token público para confirmação de rider |
+| `public_token` | `text` | `NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(9), 'hex')` | Token público para envio de docs do elenco |
+| `rider_public_token` | `text` | `NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(9), 'hex')` | Token público para confirmação de rider pela casa |
 | `created_at` | `timestamptz`| `NOT NULL DEFAULT now()` | Data de criação |
 
 ---
@@ -108,7 +112,7 @@ Representa a escala das pessoas presentes naquele show específico.
 | `created_at` | `timestamptz`| `NOT NULL DEFAULT now()` | Data da inclusão no elenco |
 
 **Constraints:**
-- `UNIQUE(show_id, person_id)` (quando `person_id IS NOT NULL`) — Impede a mesma pessoa escalada duas vezes no mesmo show.
+- `UNIQUE(show_id, person_id)` (quando `person_id IS NOT NULL`)
 
 ---
 
@@ -127,7 +131,7 @@ Materializa quais documentos são obrigatórios para quem em cada show específi
 | `created_at` | `timestamptz`| `NOT NULL DEFAULT now()` | Data de criação |
 
 **Constraints:**
-- `UNIQUE(show_id, cast_member_id, document_type_id)` — Uma pessoa só tem uma regra por tipo em cada show.
+- `UNIQUE(show_id, cast_member_id, document_type_id)`
 
 ---
 
@@ -146,6 +150,8 @@ Comprovantes enviados pela pessoa ou anexados pelo produtor.
 | `note` | `text` | `NULL` | Observações preenchidas no envio |
 | `amount` | `numeric(12,2)`| `NULL` | Valor em moeda local para reembolso |
 | `is_reimbursement`| `boolean`| `NOT NULL DEFAULT false` | Marcado pela pessoa no ato do envio |
+| `is_reimbursed` | `boolean`| `NOT NULL DEFAULT false` | Marcado pelo produtor após efetuar pagamento |
+| `reimbursed_at` | `timestamptz`| `NULL` | Timestamp da liquidação do reembolso |
 | `extracted_data`| `jsonb` | `NULL` | Dados estruturados via IA (voo, hotel, etc. - stretch) |
 | `created_at` | `timestamptz`| `NOT NULL DEFAULT now()` | Data de envio |
 
@@ -159,9 +165,9 @@ Itens do catálogo de Rider Técnico padrão do Artista.
 | `id` | `uuid` | `PRIMARY KEY DEFAULT gen_random_uuid()` | ID do item de rider padrão |
 | `user_id` | `uuid` | `NOT NULL REFERENCES auth.users ON DELETE CASCADE` | Administrador |
 | `artist_id` | `uuid` | `NOT NULL REFERENCES public.artists ON DELETE CASCADE` | Artista dono do rider |
-| `category` | `text` | `NOT NULL` | Categoria (ex: 'backline', 'som', 'iluminacao', 'camarim', 'outros') |
-| `item_name` | `text` | `NOT NULL` | Nome do item (ex: 'Amplificador de Contrabaixo') |
-| `specification`| `text` | `NULL` | Especificação (ex: 'Ampeg SVT-CL com caixa 8x10"') |
+| `category` | `text` | `NOT NULL` | Categoria ('backline', 'som', 'iluminacao', 'camarim', 'outros') |
+| `item_name` | `text` | `NOT NULL` | Nome do item |
+| `specification`| `text` | `NULL` | Especificação detalhada |
 | `quantity` | `integer`| `NOT NULL DEFAULT 1` | Quantidade demandada |
 | `is_mandatory` | `boolean`| `NOT NULL DEFAULT true` | Se é item inegociável ou desejável |
 | `position` | `integer`| `NOT NULL DEFAULT 0` | Ordem de exibição |
@@ -170,7 +176,7 @@ Itens do catálogo de Rider Técnico padrão do Artista.
 ---
 
 ### 3.8 `public.show_rider_items` (Novo)
-Instância dos itens de Rider Técnico do Show específico com ciclo de confirmação pública da casa e conferência física.
+Instância dos itens de Rider Técnico do Show com ciclo de confirmação pública da casa e conferência física.
 
 | Coluna | Tipo | Modificadores | Descrição |
 |---|---|---|---|
@@ -186,9 +192,9 @@ Instância dos itens de Rider Técnico do Show específico com ciclo de confirma
 | `position` | `integer`| `NOT NULL DEFAULT 0` | Ordenação |
 | `status` | `text` | `NOT NULL DEFAULT 'pending'` | 'pending', 'confirmed', 'exception' |
 | `exception_note`| `text` | `NULL` | Justificativa/alternativa enviada pela casa |
-| `confirmed_by_venue_at`| `timestamptz`| `NULL` | Timestamp da confirmação pela casa |
+| `confirmed_by_venue_at`| `timestamptz`| `NULL` | Timestamp da confirmação pela casa (auto-save) |
 | `physical_check`| `text` | `NOT NULL DEFAULT 'unchecked'` | 'unchecked', 'conformed', 'divergent' |
-| `physical_divergence_note`| `text`| `NULL` | Nota da conferência presencial no dia |
+| `physical_divergence_note`| `text`| `NULL` | Nota da conferência presencial no palco |
 | `created_at` | `timestamptz`| `NOT NULL DEFAULT now()` | Data de criação |
 
 **Constraints:**
@@ -200,7 +206,6 @@ Instância dos itens de Rider Técnico do Show específico com ciclo de confirma
 ## 4. Estratégia de Índices (Performance & Integridade)
 
 ```sql
--- Índices para buscas frequentes e chaves estrangeiras
 CREATE INDEX idx_people_user_id ON public.people (user_id);
 CREATE INDEX idx_person_artists_person ON public.person_artists (person_id);
 CREATE INDEX idx_person_artists_artist ON public.person_artists (artist_id);
@@ -213,6 +218,8 @@ CREATE INDEX idx_shows_public_token ON public.shows (public_token);
 CREATE INDEX idx_cast_members_show_person ON public.cast_members (show_id, person_id);
 CREATE INDEX idx_show_requirements_show_member ON public.show_requirements (show_id, cast_member_id);
 
+CREATE INDEX idx_documents_reimbursement ON public.documents (show_id) WHERE is_reimbursement = true;
+
 CREATE INDEX idx_rider_template_artist ON public.artist_rider_template_items (artist_id);
 CREATE INDEX idx_show_rider_items_show ON public.show_rider_items (show_id);
 ```
@@ -224,23 +231,8 @@ CREATE INDEX idx_show_rider_items_show ON public.show_rider_items (show_id);
 Todas as tabelas possuem RLS ativado. O modelo garante:
 1. **Administrador logado (`authenticated`)**: Acesso total apenas aos registros onde `user_id = auth.uid()`.
 2. **Acesso anônimo com token de upload (`/p/$token`)**:
-   - `SELECT` em `shows`, `cast_members` e `show_requirements` condicionado à validação do `public_token` via função segura RPC / Server Function.
+   - `SELECT` em `shows`, `cast_members`, `show_requirements` e documentos já enviados pelo integrante (para renderização da checklist pessoal dinâmica).
    - `INSERT` em `documents` e upload no bucket `documentos` validando correspondência de `show_id` e token válido.
 3. **Acesso anônimo com token de rider (`/r/$token`)**:
    - `SELECT` em `shows` e `show_rider_items` correspondentes ao `rider_public_token`.
-   - `UPDATE` limitado nas colunas `status` e `exception_note` de `show_rider_items` para os itens daquele show com token válido, sem expor dados internos de cache ou financeiro.
-
----
-
-## 6. Plano de Migração e Compatibilidade com Dados do Protótipo
-
-A migration será executada de forma retrocompatível:
-1. Criação das novas tabelas (`people`, `person_artists`, `show_requirements`, `artist_rider_template_items`, `show_rider_items`).
-2. Adição da coluna `rider_public_token` em `shows` (gerando tokens hex para todos os shows existentes).
-3. Adição da coluna `person_id` em `cast_members`.
-4. **Seed/Backfill de Pessoas a partir do Elenco Legado**:
-   - Agrupa nomes únicos de `cast_members` existentes por `user_id`.
-   - Insere na tabela `people` cada nome único.
-   - Atualiza `cast_members.person_id` apontando para o id recém-criado em `people`.
-5. **Backfill de Exigências**:
-   - Para shows já cadastrados, cria registros em `show_requirements` baseando-se nos `document_types` marcados como `required = true`, garantindo que nenhum progresso de show existente seja quebrado após o deploy.
+   - `UPDATE` limitado nas colunas `status`, `exception_note` e `confirmed_by_venue_at` de `show_rider_items` para os itens daquele show com token válido, sem expor dados de cache ou financeiro.

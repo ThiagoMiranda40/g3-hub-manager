@@ -4,24 +4,30 @@
 
 O Módulo 1 do Hub Manager Tour consolida o núcleo operacional de logística e produção para turnês musicais. Ele substitui controles manuais e planilhas dispersas por uma plataforma centralizada onde o produtor gerencia artistas, datas de shows, elenco fixo e volante, e exigências documentais críticas para viagens (passagens aéreas, vouchers de hotel, notas fiscais e comprovantes de reembolso). Adicionalmente, incorpora o Rider Técnico Digital, digitalizando o checklist de equipamentos de palco (backline) e camarim/catering para que a casa de show ou contratante confirme antecipadamente o atendimento de cada item, prevenindo surpresas no dia da apresentação.
 
-Na versão inicial (protótipo validado), o loop de cadastro de show e link público para envio de documentos provou sua eficácia com dados reais de turnê. No entanto, o uso prático revelou duas limitações estruturais: (1) os integrantes precisavam ser digitados repetidamente a cada nova data cadastrada; e (2) a exigência de documentos era tratada como regra genérica por tipo de documento, quando na realidade cada pessoa em cada show possui demandas logísticas individuais (por exemplo, um integrante local não precisa de hotel ou passagem, enquanto um músico de outra cidade necessita de ambos). O V1 corrige essa base cadastral (pessoa cadastrada uma vez com vínculos de artista ou equipe geral, e exigências definidas por pessoa + show), adiciona a confirmação digital antecipada do rider pela casa de show e implementa a linguagem visual definitiva de alta legibilidade e sofisticação.
+Na versão inicial (protótipo validado), o loop de cadastro de show e link público para envio de documentos provou sua eficácia com dados reais de turnê. O V1 traz a maturidade funcional e de experiência de uso:
+1. **Cadastro único de pessoas** com contatos, vínculos de artista/equipe geral e dados práticos para reembolso (chave Pix).
+2. **Exigências configuradas por pessoa + show**, com suporte a presets em lote (ex.: aplicar Passagem + Hotel para toda a banda com um clique), eliminando trabalho repetitivo.
+3. **Checklist pessoal dinâmica no link público do integrante**, permitindo que o músico veja instantaneamente o que já foi entregue e o que ainda falta antes de fazer upload.
+4. **Confirmação antecipada do Rider pela casa de show**, com salvamento automático em tempo real, reversibilidade imediata e opção de impressão local.
+5. **Conferência presencial no palco** otimizada para smartphones em ambiente de luz baixa.
+6. **Sistema visual definitivo "Nocturne"** com acento roxo/lilás, dark/light calibrados para alto contraste (WCAG 2.2 AA) e microinterações de 0.18s.
 
 ---
 
 ## Requisitos de Negócio
 
-### RF-01 — Cadastro Centralizado de Pessoas e Vínculos
+### RF-01 — Cadastro Centralizado de Pessoas, Vínculos e Dados Pix
 Como administrador de produção,  
-quero manter um catálogo único de pessoas com seus contatos, função padrão e vínculos com artistas ou equipe geral,  
-para não precisar redigitar dados e nomes de integrantes a cada novo show cadastrado.
+quero manter um catálogo único de pessoas com seus contatos, função padrão, vínculos de artista e chave Pix,  
+para não precisar redigitar dados a cada novo show e agilizar o pagamento de reembolsos sem trocar mensagens manuais.
 
 **Critério de aceite:**
 - **Dado** que o administrador acessa o módulo de Pessoas/Equipe,  
-  **quando** cadastra uma nova pessoa informando nome completo, telefone de contato, função padrão e indica se ela pertence a artistas específicos ou à "equipe geral",  
+  **quando** cadastra uma nova pessoa informando nome completo, telefone com DDD, função padrão, tipo/chave Pix e vínculos com artistas ou "equipe geral",  
   **então** a pessoa fica disponível permanentemente para ser escalada em qualquer data desses artistas ou turnês.
-- **Dado** uma pessoa já existente,  
-  **quando** seus dados de contato ou função forem atualizados,  
-  **então** as informações refletem em todas as consultas cadastrais sem duplicar registros.
+- **Dado** uma pessoa cadastrada com chave Pix,  
+  **quando** ela tiver reembolsos aprovados em qualquer show,  
+  **então** a chave Pix fica disponível para cópia imediata de 1 toque no painel financeiro do show.
 
 ---
 
@@ -40,54 +46,59 @@ para agilizar a montagem da escala permitindo ajustes específicos para a data.
 
 ---
 
-### RF-03 — Exigência Individual de Documentos por Pessoa e por Show
+### RF-03 — Exigência Individual de Documentos com Presets em Lote
 Como administrador de produção,  
-quero definir individualmente quais documentos são obrigatórios para cada pessoa em um show específico e estipular prazos,  
-para que o cálculo de pendências reflita exatamente o que foi acordado para cada integrante naquela viagem.
+quero definir exigências individuais por pessoa + show e contar com presets em lote,  
+para que o cálculo de pendências seja exato sem exigir dezenas de cliques manuais repetitivos.
 
 **Critério de aceite:**
-- **Dado** um integrante escalado no Show X,  
-  **quando** o administrador configura que ele necessita de "Passagem" e "Hotel", enquanto outro integrante local não necessita de nenhum documento,  
-  **então** o status do primeiro passa a monitorar esses 2 itens e o segundo é classificado expressamente como "Sem exigência configurada".
-- **Dado** uma pessoa em um show,  
-  **quando** nenhum documento foi configurado como obrigatório para ela,  
-  **então** a interface exibe o estado textual "Sem exigência configurada" (itálico suave, sem badge colorido), diferenciando-se explicitamente do estado "Pendente".
-- **Dado** uma exigência com prazo de entrega configurado,  
-  **quando** a data limite for ultrapassada sem o envio do documento correspondente,  
-  **então** a pendência é sinalizada com alerta visual de prazo expirado.
+- **Dado** a prancheta de um show com 15 integrantes,  
+  **quando** o administrador aciona a ação em lote "Aplicar preset: Toda a Banda (Passagem + Hotel)",  
+  **então** todos os músicos selecionados recebem essas duas exigências simultaneamente em 1 clique.
+- **Dado** um integrante local que não necessita de passagens nem hospedagem,  
+  **quando** nenhuma exigência for associada a ele,  
+  **então** ele é classificado expressamente como "Sem exigência configurada" (texto itálico suave sem badge colorido) e não é contabilizado na contagem de pendências do show.
+- **Dado** o cabeçalho do show,  
+  **quando** o produtor visualiza o balanço de elenco,  
+  **então** o sistema detalha: "15 integrantes: 11 com exigências ativas (8 concluídos, 3 pendentes), 4 sem exigências nesta data".
 
 ---
 
-### RF-04 — Envio Público de Documentos por Link Seguro (Sem Login)
+### RF-04 — Envio Público com Checklist Pessoal Dinâmica e Reembolso
 Como pessoa do elenco ou equipe de produção,  
-quero acessar um link seguro sem necessidade de criar conta ou senha,  
-para selecionar meu nome, anexar os arquivos solicitados e indicar se o item representa uma despesa reembolsável.
+quero acessar um link seguro sem necessidade de login e selecionar meu nome para ver o que já entreguei e o que ainda falta,  
+para enviar arquivos sem duplicar envios anteriores e poder solicitar reembolso de despesas.
 
 **Critério de aceite:**
-- **Dado** que o integrante recebe o link público de documentos daquele show,  
-  **quando** acessa a página,  
-  **então** visualiza apenas o cabeçalho do show (artista, data, local), a lista de nomes do elenco escalado e as orientações de envio.
-- **Dado** que o integrante seleciona seu próprio nome na lista,  
-  **quando** anexa um arquivo válido (PDF ou imagem de até 20MB), seleciona o tipo de documento, opcionalmente preenche o valor e marca a opção "Solicitar reembolso",  
-  **então** o envio é confirmado com feedback visual claro e o documento é anexado ao registro daquele show.
-- **Dado** um link com token inválido, expirado ou inexistente,  
+- **Dado** o acesso à página pública `/p/[token]` pelo celular,  
+  **quando** o integrante seleciona seu nome no seletor,  
+  **então** a interface renderiza uma checklist dinâmica pessoal daquela data:
+    - Itens já recebidos exibem badge verde "Recebido", nome do arquivo enviado e data/hora.
+    - Itens pendentes exibem badge de alerta "Pendente" com botão de upload direto.
+- **Dado** o anexo de um comprovante de despesa pessoal (alimentação/transporte local),  
+  **quando** o integrante informa o valor em reais e marca a opção "Solicitar reembolso deste item",  
+  **então** o envio é gravado como despesa reembolsável e entra no relatório de reembolsos do show.
+- **Dado** um token inválido ou show desativado,  
   **quando** acessado,  
-  **então** uma tela amigável informa que a página não foi encontrada ou não está mais ativa, orientando contato com a produção.
+  **então** uma tela amigável informa o status e orienta contato com a produção.
 
 ---
 
-### RF-05 — Painel de Monitoramento de Pendências e Reembolsos do Show
+### RF-05 — Painel de Pendências, Reembolsos com Cópia de Pix e Compartilhamento
 Como administrador de produção,  
-quero visualizar no detalhe do show o progresso percentual, o status individual de cada pessoa e a lista de despesas reembolsáveis,  
-para agir prontamente sobre quem ainda não enviou passagens ou vouchers e ter clareza dos valores a reembolsar.
+quero monitorar pendências, copiar chaves Pix com 1 toque para pagar reembolsos e compartilhar os links do show sem risco de trocar destinatários,  
+para ter agilidade operacional máxima durante a rotina da turnê.
 
 **Critério de aceite:**
-- **Dado** um show com exigências configuradas,  
-  **quando** o painel do show é aberto,  
-  **então** o indicador de progresso exibe a contagem consolidada (ex: "8 de 10 documentos recebidos - 80%") e a lista de integrantes com seus respectivos badges (Confirmado, Pendente, Exceção, Sem exigência).
-- **Dado** documentos enviados marcados como reembolso,  
-  **quando** o administrador acessa a aba ou seção de Reembolsos,  
-  **então** visualiza a relação de comprovantes com nome da pessoa, tipo, valor em moeda local, observação e link para visualização do comprovante, com o total consolidado da data.
+- **Dado** a aba de Reembolsos na prancheta do show,  
+  **quando** aberta pelo produtor,  
+  **então** exibe a listagem de comprovantes recebidos com Nome, Despesa, Valor em R$, Comprovante, Chave Pix do integrante e botão "Copiar Pix", além de switch para marcar "Reembolsado".
+- **Dado** a área de compartilhamento do show,  
+  **quando** visualizada,  
+  **então** apresenta dois cards visuais nitidamente diferenciados por cor e ícone semântico:
+    - 📱 Card "Link do Elenco": com orientação "Envie aos músicos e equipe para envio de passagens e vouchers".
+    - 🏛️ Card "Link do Rider": com orientação "Envie ao contratante ou casa de show para confirmação técnica".
+  - Ao clicar em copiar, o feedback de notificação (toast) confirma explicitamente qual link foi copiado.
 
 ---
 
@@ -99,46 +110,43 @@ para estabelecer a especificação oficial de equipamentos e necessidades que se
 **Critério de aceite:**
 - **Dado** o cadastro de um Artista,  
   **quando** o administrador acessa a seção de Rider Técnico,  
-  **então** pode cadastrar itens organizados por categoria (ex.: Backline / Som / Iluminação / Camarim), informando nome do item, especificação detalhada, quantidade e se é mandatório.
+  **então** pode cadastrar itens organizados por categoria (Backline / Som / Iluminação / Camarim / Outros), informando nome do item, especificação detalhada, quantidade e se é mandatório.
 - **Dado** um rider padrão cadastrado,  
   **quando** um item for editado ou removido do catálogo padrão,  
   **então** os shows futuros assumem o novo padrão, mantendo inalterados os shows passados ou já confirmados com contratantes.
 
 ---
 
-### RF-07 — Rider do Show e Confirmação Pública pela Casa/Promotor
+### RF-07 — Rider do Show com Auto-Save, Reversibilidade e Impressão Local
 Como casa de show, contratante ou promotor local,  
 quero acessar um link público exclusivo do rider daquela data sem precisar de login,  
-para confirmar item por item o que será atendido ou sinalizar exceções acompanhadas de justificativa.
+para confirmar item por item o que será atendido, sinalizar exceções justificadas com auto-save em tempo real e poder imprimir uma via para minha equipe local.
 
 **Critério de aceite:**
-- **Dado** a criação de um show,  
-  **quando** o show é salvo,  
-  **então** o sistema instancia o rider do show a partir do rider padrão do artista e gera um link público único de confirmação do rider.
-- **Dado** o acesso da casa de show pelo link público,  
-  **quando** a casa clica em "Confirmar" em um item,  
-  **então** o item assume status "Confirmado" (badge verde).
-- **Dado** um item que a casa não pode atender integralmente,  
-  **quando** a casa seleciona "Sinalizar Exceção",  
-  **então** é revelado suavemente um campo para inclusão de nota/justificativa (ex: "Possuímos modelo alternativo X") e o item assume o status "Exceção" (badge de alerta).
-- **Dado** o preenchimento das confirmações pela casa,  
-  **quando** o administrador abre o painel do show,  
-  **então** visualiza em tempo real o balanço do rider (total de itens, confirmados, exceções com notas visíveis e itens não respondidos).
+- **Dado** o acesso da casa de show pelo link público `/r/[token]`,  
+  **quando** clica em "Confirmar" ou "Sinalizar Exceção" em qualquer item,  
+  **então** a alteração é salva automaticamente em tempo real e o cabeçalho exibe o indicador "Salvo às HH:MM".
+- **Dado** que a casa marcou um item como "Exceção",  
+  **quando** a caixa de nota surge com transição suave (0.18s) e a casa clica de volta em "Confirmar",  
+  **então** o status reverte imediatamente para confirmado sem travas ou recarregamento de página.
+- **Dado** a conferência finalizada pela casa,  
+  **quando** clica em "Imprimir Cópia",  
+  **então** o navegador abre visão de impressão limpa da lista acordada, pronta para ser repassada aos técnicos locais de palco.
 
 ---
 
-### RF-08 — Conferência Física no Dia do Show (Check-in Presencial do Rider)
+### RF-08 — Conferência Física no Dia do Show (Modo Palco Mobile)
 Como equipe técnica da produção no dia do evento,  
-quero realizar a conferência presencial dos itens entregues no palco e camarim,  
-para registrar se o equipamento foi entregue conforme o prometido ou se houve divergência no local.
+quero realizar a conferência presencial dos itens entregues no palco com botões amplos de polegar em smartphone,  
+para auditar equipamentos em ambiente de pouca luz e som alto sem erro de toque.
 
 **Critério de aceite:**
-- **Dado** o dia do show,  
-  **quando** a equipe técnica acessa a checagem do rider,  
-  **então** pode marcar cada item confirmado pela casa como "Recebido Conforme" ou "Com Divergência" (anotando a divergência encontrada).
-- **Dado** o encerramento da conferência,  
-  **quando** os itens são checados,  
-  **então** o histórico fica registrado na ficha técnica do show para auditoria e controle pós-show.
+- **Dado** o acesso à conferência no smartphone durante a montagem de palco,  
+  **quando** a equipe visualiza os itens,  
+  **então** cada item é apresentado em cards com tipografia contrastada e botões amplos (área de toque >= 48px): "Recebido Conforme" (verde) e "Divergência" (alerta).
+- **Dado** que um equipamento chegou divergente (ex.: modelo diferente ou avariado),  
+  **quando** o técnico clica em "Divergência",  
+  **então** pode ditar ou digitar a observação, ficando gravada na ficha técnica do show para auditoria pós-evento.
 
 ---
 
@@ -160,7 +168,7 @@ quero que o sistema analise comprovantes enviados ou documentos de rider em PDF 
 para eliminar digitação manual de número de voo, hotel, valor de nota ou checklist de rider legado.
 
 **Critério de aceite:**
-- **Dado** o upload de um comprovante em PDF ou imagem legível (ex: bilhete de passagem aérea ou nota fiscal),  
+- **Dado** o upload de um comprovante em PDF ou imagem legível (passagem ou nota fiscal),  
   **quando** o processamento inteligente atua,  
   **então** sugere automaticamente ao produtor campos extraídos (nº voo, hotel, valor em moeda, emissor) para confirmação com um clique.
 - **Dado** o upload de um arquivo de rider técnico legado (PDF/DOCX) nas configurações do artista,  
@@ -184,34 +192,22 @@ Os seguintes itens pertencem explicitamente às fases futuras e **não** fazem p
 
 ## Cenários-Chave de Validação Ponta a Ponta
 
-Estes cenários representam os fluxos críticos de uso real que atestam a conclusão e a integridade da entrega:
+### Cenário 1: Ciclo Completo com Preset em Lote e Exigência Individual
+1. O administrador cadastra o Artista "Banda Alpha" e cadastra no banco de equipe: João (Vocalista, Pix: CPF), Maria (Técnica, Pix: e-mail) e Carlos (Produtor Geral, Equipe Geral).
+2. O administrador cria o show "Banda Alpha em Curitiba".
+3. O sistema carrega automaticamente João, Maria e Carlos no elenco.
+4. O administrador usa a ação rápida: "Aplicar Passagem + Hotel para Músicos" (aplica em João com 1 clique). Maria recebe apenas Passagem. Carlos fica "Sem exigência configurada".
+5. O cabeçalho exibe: "3 integrantes: 2 com exigências ativas (3 docs esperados: 2 de João + 1 de Maria), 1 sem exigência". Carlos não onera o cálculo de pendências.
 
-### Cenário 1: Ciclo Completo de Show com Elenco Sugerido e Exigência Individual
-1. O administrador cadastra o Artista "Banda Alpha" e cadastra 3 pessoas no banco de equipe: João (Vocalista, vinculado à Banda Alpha), Maria (Técnica de Som, vinculada à Banda Alpha) e Carlos (Produtor Geral, marcado como Equipe Geral).
-2. O administrador cria o show "Banda Alpha em Curitiba - 15/Outubro".
-3. O sistema carrega automaticamente João, Maria e Carlos no elenco do show.
-4. O administrador ajusta as exigências:
-   - João: Passagem e Hotel (obrigatórios).
-   - Maria: Apenas Passagem (obrigatório).
-   - Carlos: Nenhum documento exigido (estado "Sem exigência configurada").
-5. O painel do show calcula o progresso com base em 3 documentos esperados (2 de João + 1 de Maria). Carlos não adiciona pendência ao cálculo.
-6. Carlos aparece visualmente destacado com a indicação textual em itálico "Sem exigência configurada", enquanto João e Maria exibem a contagem de pendências.
+### Cenário 2: Envio com Checklist Dinâmica e Liquidação de Reembolso via Pix
+1. João abre o link do show no celular (`/p/[token]`).
+2. Ao selecionar seu nome, a tela exibe sua checklist: Passagem (Pendente) e Hotel (Pendente).
+3. João anexa a passagem. A checklist atualiza instantaneamente para Passagem: [Recebido].
+4. Em seguida, João anexa um recibo de alimentação de R$ 85,00, marcando "Solicitar reembolso".
+5. O produtor abre a prancheta do show: na aba Reembolsos, visualiza o lançamento de João de R$ 85,00, clica no botão "Copiar Pix" (copia a chave Pix de João cadastrada), efetua o pagamento no banco e clica no switch "Marcar como Reembolsado".
 
-### Cenário 2: Envio Público por Integrante com Solicitação de Reembolso
-1. João recebe o link público do show de Curitiba (`/p/[token]`).
-2. Sem realizar login, João seleciona seu nome no seletor de integrantes.
-3. João anexa o bilhete aéreo (PDF de 2MB), seleciona o tipo "Passagem", não marca reembolso e confirma.
-4. O sistema confirma o envio e atualiza a exigência de Passagem de João para "Recebido".
-5. Em seguida, João anexa um cupom fiscal de alimentação de R$ 85,00, seleciona "Nota fiscal", marca "Solicitar reembolso" e informa o valor.
-6. O administrador abre o painel do show e constata:
-   - Progresso do show atualizado.
-   - João com Passagem concluída e Hotel pendente.
-   - Na aba "Reembolsos", aparece o lançamento de João no valor de R$ 85,00 com link direto para o cupom.
-
-### Cenário 3: Confirmação Antecipada do Rider Técnico pela Casa de Show
-1. No cadastro da "Banda Alpha", o administrador registrou 2 itens de Rider: "Amplificador de Baixo Ampeg SVT" (Backline) e "Água Mineral sem gás 24 un" (Camarim).
-2. Ao criar o show de Curitiba, esses 2 itens são automaticamente vinculados ao show.
-3. O produtor envia o link público do rider (`/r/[token]`) ao gerente da casa de eventos.
-4. O gerente abre a página do rider, confirma a Água Mineral com 1 clique (badge verde) e na linha do Amplificador clica em "Sinalizar Exceção".
-5. Ao selecionar exceção, o campo de nota surge suavemente; ele digita: "Não temos Ampeg SVT, dispomos de Hartke 3500 com caixa 4x10".
-6. O produtor da banda recarrega o painel do show e visualiza de imediato: 1 item confirmado, 1 exceção com a nota do promotor visível, permitindo negociação dias antes do embarque.
+### Cenário 3: Confirmação do Rider com Auto-Save, Reversibilidade e Conferência
+1. A casa de eventos abre o link `/r/[token]`.
+2. A casa clica em "Confirmar" na Bateria e "Sinalizar Exceção" no Amplificador, digitando nota com a alternativa.
+3. O cabeçalho confirma visualmente "Salvo às 14:15". Em seguida, a casa descobre que conseguiu o amplificador e clica em "Confirmar" novamente; a exceção reverte para confirmado imediatamente.
+4. No dia do show, o roadie abre o "Modo Palco" no smartphone e faz o check-in presencial com botões grandes de polegar, marcando os itens entregues.
