@@ -70,6 +70,10 @@
    - Status nunca dependem apenas de cor; são sempre acompanhados de ícones distintos e rótulos textuais visíveis.
 4. **Mensagens e Feedbacks com ARIA:**
    - Indicador de auto-save e toasts de cópia utilizam `aria-live="polite"`.
+5. **Feedback Tátil Imediato (:active) em Touch:**
+   - Feedback de toque (`:active`) obrigatório em todo elemento interativo — botão primário, botão secundário, item de navegação e card clicável —, não só `:hover`.
+   - **Critério de aceite:** em dispositivo touch, tocar em qualquer elemento clicável produz reação visual perceptível (mudança de cor/fundo ou leve escala) em ~100–150ms, antes da ação ou navegação ocorrer.
+   - Não substitui os estados de hover existentes para desktop, é aditivo.
 
 ---
 

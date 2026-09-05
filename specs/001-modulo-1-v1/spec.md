@@ -10,7 +10,7 @@ Na versão inicial (protótipo validado), o loop de cadastro de show e link púb
 3. **Checklist pessoal dinâmica no link público do integrante**, permitindo que o músico veja instantaneamente o que já foi entregue e o que ainda falta antes de fazer upload.
 4. **Confirmação antecipada do Rider pela casa de show**, com salvamento automático em tempo real, reversibilidade imediata e opção de impressão local.
 5. **Conferência presencial no palco** otimizada para smartphones em ambiente de luz baixa.
-6. **Sistema visual definitivo "Nocturne"** com acento roxo/lilás, dark/light calibrados para alto contraste (WCAG 2.2 AA) e microinterações de 0.18s.
+6. **Sistema visual definitivo "Nocturne"** com acento roxo/lilás, dark/light calibrados para alto contraste (WCAG 2.2 AA), microinterações de 0.18s e resposta tátil imediata ao toque (`:active` em 100–150ms).
 
 ---
 
@@ -174,6 +174,23 @@ para eliminar digitação manual de número de voo, hotel, valor de nota ou chec
 - **Dado** o upload de um arquivo de rider técnico legado (PDF/DOCX) nas configurações do artista,  
   **quando** solicitada a importação por inteligência,  
   **então** o sistema estrutura os itens em categorias e quantidades pré-preenchidas para revisão e aprovação do produtor.
+
+---
+
+## Requisitos Não-Funcionais
+
+### RNF-01 — Usabilidade Mobile e Feedback Visual de Toque (:active)
+Como usuário em dispositivo móvel (integrante do elenco, equipe técnica no palco ou contratante local),  
+quero receber confirmação visual instantânea ao tocar em qualquer elemento interativo,  
+para ter certeza física e imediata de que o comando foi registrado antes da navegação ou mutação ocorrer.
+
+**Critério de aceite:**
+- **Dado** o acesso ao sistema em dispositivo com tela sensível ao toque (smartphone ou tablet),  
+  **quando** o usuário toca em qualquer elemento interativo — botão primário, botão secundário, item de menu/navegação, card clicável de show, pílula de filtro, seletor de aba (tab) ou dropzone de arquivo —,  
+  **então** o elemento produz uma reação visual perceptível imediata (mudança de cor/fundo ou leve encolhimento tátil `scale(0.97)`) com transição rápida de ~100–150ms (nominal 120ms), antes da navegação ou ação acontecer.
+- **Dado** o acesso por desktop com mouse e cursor,  
+  **quando** o cursor passa sobre os elementos interativos,  
+  **então** todos os estados de `:hover` existentes continuam funcionando normalmente (o feedback `:active` é aditivo, não substitutivo).
 
 ---
 

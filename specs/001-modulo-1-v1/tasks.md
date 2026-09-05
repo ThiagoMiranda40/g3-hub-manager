@@ -53,19 +53,21 @@ T-04 (Design System Nocturne Calibrado) ─────────────�
 
 ## T-03 — Ciclo TDD: Lógica de Cálculo de Pendências Individuais e Estatísticas do Rider
 - **Depende de:** T-01
+- **Referência:** Casos de teste derivados em `specs/001-modulo-1-v1/qa-plan.md` (TC-03.1 a TC-03.4)
 - **Arquivos afetados:**
   - `[NEW] src/lib/g3.test.ts`
   - `[MODIFY] src/lib/g3.ts`
 - **Fazer:**
   1. **Escrever testes unitários que falham** em `src/lib/g3.test.ts`:
      - Teste 1: Membro com exigências pendentes (Passagem + Hotel) -> contabiliza 2 pendências.
-     - Teste 2: Membro sem exigência configurada -> `hasRequirement: false`, não adiciona pendência ao total e é identificado como dispensado.
-     - Teste 3: Contador consolidado discriminado (ex.: "15 integrantes: 11 ativos [8 concluídos, 3 pendentes], 4 sem exigência").
+     - Teste 2 (BVA TC-03.2): Membro sem exigência configurada -> `hasRequirement: false`, NUNCA adiciona pendência ao total e é identificado expressamente como dispensado.
+     - Teste 3: Contador consolidado discriminado (ex.: "15 integrantes: 11 ativos [8 concluídos, 3 pendentes], 4 sem exigência nesta data").
      - Teste 4: Cálculo do balanço do rider (total de itens, confirmados, exceções, pendentes).
+     - Teste 5 (TC-03.3): Idempotência de presets em lote (aplicar duas vezes o mesmo preset não duplica exigências).
   2. **Implementar em `src/lib/g3.ts`** a nova assinatura de `computeShowProgress` aceitando `requirements: ShowRequirement[]` e helpers de estatísticas até todos os testes passarem.
   3. Rodar a suíte completa de testes.
 - **Verificação técnica:** `npm test -- src/lib/g3.test.ts`
-- **Tradução em linguagem simples:** "Testei os cálculos do sistema: se uma pessoa não precisa de passagem, ela não é contada como pendente; a contagem do show discrimina quem tem pendência de quem foi dispensado nesta data. Todos os cálculos matemáticos foram provados."
+- **Tradução em linguagem simples:** "Testei os cálculos do sistema: se uma pessoa não precisa de passagem, ela não é contada como pendente; a contagem do show discrimina quem tem pendência de quem foi dispensado nesta data. Todos os cálculos matemáticos foram provados com casos de fronteira."
 
 ---
 
@@ -87,8 +89,9 @@ T-04 (Design System Nocturne Calibrado) ─────────────�
      - `excecao` (badge roxo/vermelho)
      - `sem_exigencia` (texto itálico sutil sem badge colorido).
   3. Atualizar `AppShell.tsx` com navegação para Agenda, Pessoas & Equipe, e Configurações no padrão Nocturne.
+  4. Garantir feedback tátil `:active` (RNF-01) em todos os elementos interativos: botões (`buttonVariants` e regras base CSS com `scale(0.97)`), links de navegação (`touch-nav`), cards clicáveis (`touch-card`), tabs e dropzones, com transição rápida de 120ms, mantendo os estados `:hover` desktop intactos.
 - **Verificação técnica:** `npx tsc --noEmit && npm run build`
-- **Tradução em linguagem simples:** "O design do sistema foi atualizado para a direção visual definitiva Nocturne: cores elegantes em tons de lilás e grafite, cantos suaves, ícones acessíveis com alto contraste (WCAG AA) e microinterações de 0.18s."
+- **Tradução em linguagem simples:** "O design do sistema foi atualizado para a direção visual definitiva Nocturne: cores elegantes em tons de lilás e grafite, cantos suaves, ícones acessíveis com alto contraste (WCAG AA), microinterações de 0.18s e resposta tátil imediata (120ms) ao toque no celular."
 
 ---
 
@@ -216,8 +219,9 @@ T-04 (Design System Nocturne Calibrado) ─────────────�
 
 ---
 
-## T-13 — Verificação Ponta a Ponta dos Cenários de Aceite e Build de Produção
+## T-13 — Verificação Ponta a Ponta dos Cenários de Aceite, DoD de QA e Build de Produção
 - **Depende de:** T-01 até T-12
+- **Referência:** Checklist de "Pronto para Produção" (DoD) em `specs/001-modulo-1-v1/qa-plan.md`
 - **Arquivos afetados:** Todos os componentes e rotas do Módulo 1 V1
 - **Fazer:**
   1. Executar os 3 cenários-chave ponta a ponta definidos em `spec.md`:
@@ -227,5 +231,6 @@ T-04 (Design System Nocturne Calibrado) ─────────────�
   2. Rodar a suíte de testes unitários: `npm test`.
   3. Executar typecheck estrito: `npx tsc --noEmit`.
   4. Gerar o build de produção: `npm run build` e validar pacote para deploy Cloudflare Workers.
+  5. Validar os itens do checklist Definition of Done (técnico e linguagem simples) de `qa-plan.md`.
 - **Verificação técnica:** `npm test && npx tsc --noEmit && npm run build`
-- **Tradução em linguagem simples:** "Todos os 3 fluxos completos do Módulo 1 foram executados de ponta a ponta, todos os testes unitários passaram e o build final foi compilado com 100% de integridade para publicação."
+- **Tradução em linguagem simples:** "Todos os 3 fluxos completos do Módulo 1 foram executados de ponta a ponta, todos os testes unitários passaram e o checklist de pronto para produção foi validado com 100% de integridade."
