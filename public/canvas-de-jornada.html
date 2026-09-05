@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hub Manager Tour — Canvas da Jornada do Processo</title>
+<style>
+  :root {
+    --ink: #1c1b1a;
+    --paper: #f7f5f0;
+    --paper-raised: #ffffff;
+    --line: #ddd8cc;
+    --pain: #a5372c;
+    --pain-soft: #f3ded9;
+    --fix: #3f6b52;
+    --fix-soft: #dde9e0;
+    --future: #8a6d3b;
+    --future-soft: #f1e7d4;
+    --muted: #6b6659;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Inter, sans-serif;
+    padding: 40px 24px 90px;
+  }
+  .wrap { max-width: 1220px; margin: 0 auto; }
+  .kicker {
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 6px 0 4px;
+  }
+  .sub {
+    font-size: 14.5px;
+    color: var(--muted);
+    max-width: 720px;
+    margin-bottom: 40px;
+    line-height: 1.5;
+  }
+
+  .canvas-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 6px;
+    margin-bottom: 18px;
+  }
+  .canvas-label.pain { background: var(--pain-soft); color: var(--pain); }
+  .canvas-label.fix { background: var(--fix-soft); color: var(--fix); }
+
+  .canvas-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-bottom: 56px;
+  }
+
+  .stage-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .stage-card.pain-card { border-top: 3px solid var(--pain); }
+  .stage-card.fix-card { border-top: 3px solid var(--fix); }
+
+  .stage-title {
+    font-weight: 700;
+    font-size: 14.5px;
+    line-height: 1.3;
+    min-height: 38px;
+  }
+
+  .field-label {
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .field-text {
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--ink);
+  }
+  .field-text.muted { color: var(--muted); }
+  .field-text.pain-text { color: var(--pain); }
+  .field-text.fix-text { color: var(--fix); }
+  .field-text.future-text { color: var(--future); }
+
+  .field-block.future {
+    background: var(--future-soft);
+    margin: -4px -15px -16px;
+    padding: 10px 15px 14px;
+    border-radius: 0 0 9px 9px;
+  }
+
+  .arrow-between {
+    text-align: center;
+    font-size: 26px;
+    color: var(--line);
+    margin: -30px 0 30px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 22px;
+    margin-top: -20px;
+    margin-bottom: 50px;
+    font-size: 12px;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+    margin-top: 24px;
+  }
+  .roadmap-card {
+    border-top: 3px solid var(--future);
+  }
+  .phase-tag {
+    font-family: "Courier New", monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--future);
+  }
+
+  @media (max-width: 980px) {
+    .canvas-row { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 620px) {
+    .canvas-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Hub Manager Tour · Canvas da jornada do processo</p>
+  <h1>Como a operação funciona hoje, e como fica com o Hub</h1>
+  <p class="sub">Mapa comparativo da jornada de produção de turnê — do jeito que já roda hoje (uma operação profissional, mas com gargalo operacional real) até o que o Módulo 1 do sistema já resolve.</p>
+
+  <div class="canvas-label pain">Jornada de hoje</div>
+
+  <div class="canvas-row">
+    <div class="stage-card pain-card">
+      <div class="stage-title">Show fechado, tarefas delegadas</div>
+      <div class="field-block">
+        <div class="field-label">O que acontece</div>
+        <div class="field-text muted">Negociação com casa, promotor ou prefeitura — estrutura já profissional, roda bem.</div>
+      </div>
+      <div class="field-block">
+        <div class="field-label">Gargalo</div>
+        <div class="field-text pain-text">—</div>
+      </div>
+    </div>
+
+    <div class="stage-card pain-card">
+      <div class="stage-title">Documento e tratativa guardados</div>
+      <div class="field-block">
+        <div class="field-label">O que acontece</div>
+        <div class="field-text muted">Comprovante e negociação ficam salvos em pastas do Google Drive e em e-mails trocados ao longo do tempo.</div>
+      </div>
+      <div class="field-block">
+        <div class="field-label">Gargalo</div>
+        <div class="field-text pain-text">Com o tempo, fica difícil achar o documento certo ou lembrar o que foi combinado.</div>
+      </div>
+    </div>
+
+    <div class="stage-card pain-card">
+      <div class="stage-title">Prazo delegado é cobrado</div>
+      <div class="field-block">
+        <div class="field-label">O que acontece</div>
+        <div class="field-text muted">Alguém da equipe fica responsável por comprar passagem, reservar hotel ou entregar algo até uma data.</div>
+      </div>
+      <div class="field-block">
+        <div class="field-label">Gargalo</div>
+        <div class="field-text pain-text">Sem painel de acompanhamento, ninguém percebe o atraso a tempo — foi o que aconteceu com a passagem esquecida.</div>
+      </div>
+    </div>
+
+    <div class="stage-card pain-card">
+      <div class="stage-title">Relatório da produção</div>
+      <div class="field-block">
+        <div class="field-label">O que acontece</div>
+        <div class="field-text muted">Alguém busca os documentos salvos e redige manualmente um resumo da produção do show.</div>
+      </div>
+      <div class="field-block">
+        <div class="field-label">Gargalo</div>
+        <div class="field-text pain-text">Consome tempo e mão de obra que poderia estar em outra tarefa da produção.</div>
+      </div>
+    </div>
+
+    <div class="stage-card pain-card">
+      <div class="stage-title">Comunicação com a base de fãs</div>
+      <div class="field-block">
+        <div class="field-label">O que acontece</div>
+        <div class="field-text muted">Milhares de contatos (mailing e WhatsApp) de fãs de shows anteriores.</div>
+      </div>
+      <div class="field-block">
+        <div class="field-label">Gargalo</div>
+        <div class="field-text pain-text">Base parada, sem comunicação ativa — receita que não está sendo capturada.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-between">↓</div>
+
+  <div class="canvas-label fix">Jornada com o Hub Manager Tour</div>
+
+  <div class="canvas-row">
+    <div class="stage-card fix-card">
+      <div class="stage-title">Show fechado, tarefas delegadas</div>
+      <div class="field-block">
+        <div class="field-label">O que acontece</div>
+        <div class="field-text muted">Show cadastrado no sistema; elenco e exigência de cada pessoa sugeridos automaticamente.</div>
+      </div>
+      <div class="field-block">
+        <div class="field-label">Ganho</div>
+        <div class="field-text fix-text">Base estruturada para tudo que segue.</div>
+      </div>
+    </div>
+
+    <div class="stage-card fix-card">
+      <div class="stage-title">Documento e tratativa guardados</div>
+      <div class="field-block">
+        <div class="field-label">O que acontece</div>
+        <div class="field-text muted">Cada pessoa envia o próprio documento por um link direto, sem precisar de login.</div>
+      </div>
+      <div class="field-block">
+        <div class="field-label">Ganho</div>
+        <div class="field-text fix-text">Nada se perde — tudo fica vinculado ao show certo, num só lugar.</div>
+      </div>
+    </div>
+
+    <div class="stage-card fix-card">
+      <div class="stage-title">Prazo delegado é cobrado</div>
+      <div class="field-block">
+        <div class="field-label">O que acontece</div>
+        <div class="field-text muted">Painel mostra, em tempo real, quem já enviou e quem ainda falta — por show.</div>
+      </div>
+      <div class="field-block">
+        <div class="field-label">Ganho</div>
+        <div class="field-text fix-text">O tipo de atraso que gerou o caso da passagem fica visível antes de virar problema.</div>
+      </div>
+    </div>
+
+    <div class="stage-card fix-card">
+      <div class="stage-title">Relatório da produção</div>
+      <div class="field-block">
+        <div class="field-label">O que acontece</div>
+        <div class="field-text muted">Ficha de Produção gerada automaticamente a partir do que já está no sistema.</div>
+      </div>
+      <div class="field-block">
+        <div class="field-label">Ganho</div>
+        <div class="field-text fix-text">Zero tempo de equipe gasto montando relatório manualmente.</div>
+      </div>
+    </div>
+
+    <div class="stage-card fix-card">
+      <div class="stage-title">Comunicação com a base de fãs</div>
+      <div class="field-block">
+        <div class="field-label">O que acontece</div>
+        <div class="field-text muted">Ainda não faz parte desta fase do sistema.</div>
+      </div>
+      <div class="field-block future">
+        <div class="field-label">Status</div>
+        <div class="field-text future-text">Planejado para uma fase futura do roadmap (reativação de base com IA).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:var(--pain)"></i> Gargalo real hoje</span>
+    <span><i class="dot" style="background:var(--fix)"></i> Já resolvido no Módulo 1 V1</span>
+    <span><i class="dot" style="background:var(--future)"></i> Planejado, fase futura</span>
+  </div>
+
+  <hr style="border:none; border-top:1px dashed var(--line); margin:0 0 30px;">
+
+  <div class="canvas-label" style="background:var(--future-soft); color:var(--future);">O que vem nas próximas fases</div>
+  <p class="sub" style="margin-top:14px;">O Módulo 1 é só a base. Cada fase seguinte acrescenta um recurso novo, resolvendo um gargalo que ainda não foi coberto.</p>
+
+  <div class="roadmap-grid">
+    <div class="stage-card roadmap-card">
+      <div class="phase-tag">Fase 2</div>
+      <div class="stage-title">Contratos &amp; Assinatura</div>
+      <div class="field-text muted">Geração e análise de contrato por IA, com assinatura digital — sem precisar imprimir nada.</div>
+    </div>
+    <div class="stage-card roadmap-card">
+      <div class="phase-tag">Fase 3</div>
+      <div class="stage-title">Logística Inteligente</div>
+      <div class="field-text muted">Pesquisa e comparação automática de passagem, hospedagem e fornecedor local por show.</div>
+    </div>
+    <div class="stage-card roadmap-card">
+      <div class="phase-tag">Fase 4</div>
+      <div class="stage-title">CRM &amp; Marketing de Audiência</div>
+      <div class="field-text muted">Reativação da base de fãs (mailing e WhatsApp) por cidade e show, sem risco de bloqueio.</div>
+    </div>
+    <div class="stage-card roadmap-card">
+      <div class="phase-tag">Fase 5</div>
+      <div class="stage-title">Importação de Venda de Ingressos</div>
+      <div class="field-text muted">Consolida os dados de venda das plataformas já usadas hoje, num só lugar.</div>
+    </div>
+    <div class="stage-card roadmap-card">
+      <div class="phase-tag">Fase 6</div>
+      <div class="stage-title">Checkout Próprio</div>
+      <div class="field-text muted">Venda de ingresso direto pelo Hub — taxa menor do que as plataformas atuais chegam a cobrar.</div>
+    </div>
+    <div class="stage-card roadmap-card">
+      <div class="phase-tag">Fase 7</div>
+      <div class="stage-title">Agente Operacional Conversacional</div>
+      <div class="field-text muted">Cadastrar show e delegar tarefa por voz ou texto, direto no WhatsApp.</div>
+    </div>
+    <div class="stage-card roadmap-card">
+      <div class="phase-tag">Fase 8</div>
+      <div class="stage-title">Financeiro</div>
+      <div class="field-text muted">Contas a pagar e a receber, fluxo de caixa e recomendação automática por IA.</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
