@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hub Manager Tour — Demonstração</title>
+<style>
+  :root {
+    --ink: #1c1b1a;
+    --paper: #f7f5f0;
+    --paper-raised: #ffffff;
+    --line: #ddd8cc;
+    --accent: #6b4fa0;
+    --accent-soft: #ece6f5;
+    --muted: #6b6659;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Inter, sans-serif;
+    padding: 40px 24px 90px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  .kicker {
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 6px 0 4px;
+  }
+  .sub {
+    font-size: 14.5px;
+    color: var(--muted);
+    max-width: 640px;
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  .video-frame {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px;
+  }
+  .video-aspect {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #0d0c0b;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .video-aspect iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .caption {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 6px 6px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .badge {
+    font-family: "Courier New", monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 3px 9px;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Hub Manager Tour · Demonstração</p>
+  <h1>Veja o sistema funcionando</h1>
+  <p class="sub">Vídeo de demonstração do fluxo completo: cadastro de show, elenco, envio de documento e acompanhamento de pendência.</p>
+
+  <div class="video-frame">
+    <div class="video-aspect">
+      <iframe
+        id="panda-1e3a9f84-e467-45ea-ae56-9a1462cef6f3"
+        src="https://player-vz-ceb8f7bf-152.tv.pandavideo.com.br/embed/?v=1e3a9f84-e467-45ea-ae56-9a1462cef6f3"
+        style="border:none;"
+        allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
+        allowfullscreen="true"
+        fetchpriority="high">
+      </iframe>
+    </div>
+    <div class="caption">
+      <span>Hub Manager Tour — protótipo V1</span>
+      <span class="badge">Panda Video</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
