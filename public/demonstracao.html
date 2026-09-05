@@ -85,18 +85,50 @@
     border-radius: 4px;
   }
 
-  .cta-btn {
-    display: inline-block;
+  .cta-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
     margin-top: 28px;
+  }
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: var(--accent);
     color: #fff;
     text-decoration: none;
     font-size: 14px;
     font-weight: 600;
-    padding: 12px 26px;
+    padding: 12px 24px;
     border-radius: 8px;
+    border: 1.5px solid var(--accent);
+    transition: all 0.18s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
-  .cta-btn:hover { opacity: 0.92; }
+  .cta-btn:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+  }
+  .cta-btn-secondary {
+    background: var(--paper-raised);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .cta-btn-secondary:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  @media (max-width: 540px) {
+    .cta-group {
+      flex-direction: column;
+    }
+    .cta-btn {
+      width: 100%;
+    }
+  }
 </style>
 </head>
 <body>
@@ -122,7 +154,10 @@
     </div>
   </div>
 
-  <a href="https://hubmanagertour.triadetecnologiaesolucoes.com.br/" class="cta-btn">Acessar o Hub Manager Tour</a>
+  <div class="cta-group">
+    <a href="https://hubmanagertour.triadetecnologiaesolucoes.com.br/" class="cta-btn" target="_blank" rel="noopener noreferrer">Acessar o Hub Manager Tour</a>
+    <a href="https://hubmanagertour.triadetecnologiaesolucoes.com.br/mapa-da-jornada" class="cta-btn cta-btn-secondary" target="_blank" rel="noopener noreferrer">Mapa de Jornada</a>
+  </div>
 </div>
 </body>
 </html>
