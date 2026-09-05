@@ -160,8 +160,8 @@ function PublicUpload() {
                 key={m.id}
                 className={
                   memberId === m.id
-                    ? "flex cursor-pointer items-center gap-3 border-2 border-foreground px-3 py-3"
-                    : "flex cursor-pointer items-center gap-3 border border-line px-3 py-3"
+                    ? "flex cursor-pointer items-center gap-3 border-2 border-foreground px-3 py-3 select-none touch-manipulation active:scale-[0.98] transition-all duration-120"
+                    : "flex cursor-pointer items-center gap-3 border border-line px-3 py-3 select-none touch-manipulation active:scale-[0.98] active:bg-accent/40 transition-all duration-120"
                 }
               >
                 <input
@@ -193,8 +193,8 @@ function PublicUpload() {
                 onClick={() => setDocTypeId(t.id)}
                 className={
                   docTypeId === t.id
-                    ? "bg-foreground px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-background"
-                    : "border border-line px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground"
+                    ? "bg-foreground px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-background select-none touch-manipulation active:scale-[0.96] active:opacity-90 transition-all duration-120"
+                    : "border border-line px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground select-none touch-manipulation active:scale-[0.96] active:bg-accent transition-all duration-120"
                 }
               >
                 {t.name}
@@ -208,8 +208,8 @@ function PublicUpload() {
           <label
             className={
               file
-                ? "mt-2 grid cursor-pointer place-items-center border-2 border-ok bg-ok/10 px-4 py-6 text-center"
-                : "mt-2 grid cursor-pointer place-items-center border border-dashed border-line px-4 py-8 text-center"
+                ? "mt-2 grid cursor-pointer place-items-center border-2 border-ok bg-ok/10 px-4 py-6 text-center select-none touch-manipulation active:scale-[0.98] transition-all duration-120"
+                : "mt-2 grid cursor-pointer place-items-center border border-dashed border-line px-4 py-8 text-center select-none touch-manipulation active:scale-[0.98] active:bg-accent/40 transition-all duration-120"
             }
           >
             <input
@@ -250,7 +250,7 @@ function PublicUpload() {
           </label>
         </div>
 
-        <label className="flex cursor-pointer items-start gap-3 border border-line px-3 py-3">
+        <label className="flex cursor-pointer items-start gap-3 border border-line px-3 py-3 select-none touch-manipulation active:bg-accent/30 transition-colors duration-120">
           <input
             type="checkbox"
             checked={isReimbursement}
@@ -297,7 +297,7 @@ function PublicUpload() {
         <button
           type="submit"
           disabled={upload.isPending || !memberId || !file || !docTypeId}
-          className="w-full bg-signal py-3.5 font-mono text-[12px] uppercase tracking-[0.2em] text-signal-foreground disabled:opacity-40"
+          className="w-full bg-signal py-3.5 font-mono text-[12px] uppercase tracking-[0.2em] text-signal-foreground disabled:opacity-40 select-none touch-manipulation active:scale-[0.97] active:opacity-90 transition-all duration-120"
         >
           {upload.isPending ? "Enviando…" : "Enviar documento"}
         </button>

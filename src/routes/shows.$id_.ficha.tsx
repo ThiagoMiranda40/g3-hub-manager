@@ -98,13 +98,17 @@ function FichaProducao() {
   return (
     <main className="mx-auto max-w-4xl px-5 py-8 print:max-w-none print:px-0 print:py-0">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <Link to="/shows/$id" params={{ id }} className="label-mono hover:text-foreground">
+        <Link
+          to="/shows/$id"
+          params={{ id }}
+          className="label-mono hover:text-foreground active:opacity-70 transition-opacity duration-120 touch-manipulation"
+        >
           ← Voltar para o show
         </Link>
         <button
           type="button"
           onClick={() => window.print()}
-          className="bg-foreground px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-background transition-colors hover:bg-signal"
+          className="bg-foreground px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-background transition-colors hover:bg-signal active:scale-[0.97] active:opacity-90 duration-120 touch-manipulation"
         >
           Imprimir / Exportar PDF
         </button>

@@ -226,13 +226,23 @@ CREATE INDEX idx_show_rider_items_show ON public.show_rider_items (show_id);
 
 ---
 
-## 5. Políticas de Segurança (Row Level Security - RLS)
+## 5. Políticas de Segurança (Row Level Security - RLS) & Proteção de Dados
 
 Todas as tabelas possuem RLS ativado. O modelo garante:
 1. **Administrador logado (`authenticated`)**: Acesso total apenas aos registros onde `user_id = auth.uid()`.
 2. **Acesso anônimo com token de upload (`/p/$token`)**:
-   - `SELECT` em `shows`, `cast_members`, `show_requirements` e documentos já enviados pelo integrante (para renderização da checklist pessoal dinâmica).
+   - `SELECT` estritamente limitado: retorna apenas dados públicos do show (`city`, `venue`, `show_date`, `artist`), nomes do elenco e tipos de documentos esperados.
+   - **Blindagem de dados sensíveis (LGPD)**: Chaves Pix, CPFs, valores de reembolso, notas fiscais e dados de contato de outros integrantes **nunca** são retornados para a rota pública.
    - `INSERT` em `documents` e upload no bucket `documentos` validando correspondência de `show_id` e token válido.
-3. **Acesso anônimo com token de rider (`/r/$token`)**:
-   - `SELECT` em `shows` e `show_rider_items` correspondentes ao `rider_public_token`.
-   - `UPDATE` limitado nas colunas `status`, `exception_note` e `confirmed_by_venue_at` de `show_rider_items` para os itens daquele show com token válido, sem expor dados de cache ou financeiro.
+3. **Acesso anônimo com token de rider (`/r/$token`) — Prevenção de IDOR/BOLA (A01:2025)**:
+   - `SELECT` em `shows` e `show_rider_items` correspondentes estritamente ao `rider_public_token`.
+   - `UPDATE` limitado nas colunas `status`, `exception_note` e `confirmed_by_venue_at` de `show_rider_items`.
+   - **Regra de integridade atômica**: Toda mutação exige obrigatoriamente a cláusula composta:
+     ```sql
+     WHERE id = :itemId AND show_id = (SELECT id FROM public.shows WHERE rider_public_token = :riderToken)
+     ```
+     Impossibilita que qualquer usuário altere itens de outro show mesmo conhecendo UUIDs externos.
+4. **Proteção de Storage contra Stored XSS e Abuso (A02 e A08:2025)**:
+   - Bloqueio deliberado de formatos de risco como `.svg` (execução de scripts embutidos) e executáveis.
+   - Whitelist restrita e auditada: `jpg, jpeg, png, webp, pdf`.
+   - Inspeção de tamanho máximo de 20MB no servidor com remoção imediata de arquivos órfãos.

@@ -101,13 +101,16 @@
 @layer base {
   * {
     border-color: var(--color-border);
+    -webkit-tap-highlight-color: transparent;
   }
 
+  html,
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    touch-action: manipulation;
   }
 
   h1,
@@ -115,6 +118,53 @@
   h3 {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
+  }
+
+  /* Feedback tátil imediato em botões e elementos clicáveis no mobile */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition-property: transform, opacity, background-color, border-color, color;
+    transition-duration: 120ms;
+    transition-timing-function: ease;
+  }
+
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active {
+    transform: scale(0.97);
+  }
+
+  a {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@utility touch-feedback {
+  transition: transform 120ms ease, opacity 120ms ease, background-color 120ms ease;
+  touch-action: manipulation;
+  &:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+  }
+}
+
+@utility touch-card {
+  transition: transform 120ms ease, background-color 120ms ease, border-color 120ms ease;
+  touch-action: manipulation;
+  &:active {
+    transform: scale(0.985);
+    background-color: var(--color-accent);
+  }
+}
+
+@utility touch-nav {
+  transition: opacity 120ms ease, color 120ms ease, transform 120ms ease;
+  touch-action: manipulation;
+  &:active {
+    opacity: 0.7;
+    transform: scale(0.97);
   }
 }
 

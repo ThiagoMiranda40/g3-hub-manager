@@ -180,8 +180,9 @@ T-04 (Design System Nocturne Calibrado) ─────────────�
      - Botão "Sinalizar Exceção": revela com animação suave (0.18s) caixa de texto para a nota.
      - Clicar de volta em "Confirmar" reverte o status imediatamente.
   4. Adicionar botão "Imprimir Cópia de Atendimento" que abre visão limpa sem botões para a equipe técnica do teatro.
+  5. Blindagem de segurança anti-IDOR/BOLA (A01:2025): a Server Function de mutação deve exigir obrigatoriamente a validação composta `WHERE id = itemId AND show_id = show.id`, impedindo que uma casa com token altere itens de outro show.
 - **Verificação técnica:** `npx tsc --noEmit && npm run build`
-- **Tradução em linguagem simples:** "A casa de show confirma item a item pelo celular com salvamento automático na hora, pode reverter escolhas facilmente e imprimir uma via da lista acordada para o técnico local do teatro."
+- **Tradução em linguagem simples:** "A casa de show confirma item a item pelo celular com salvamento automático e proteção de segurança garantindo que ninguém consiga alterar dados de outro evento."
 
 ---
 

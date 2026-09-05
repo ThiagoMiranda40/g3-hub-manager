@@ -121,7 +121,7 @@ function AuthPage() {
           <button
             type="submit"
             disabled={busy}
-            className="w-full bg-foreground py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-background transition-colors hover:bg-signal disabled:opacity-50"
+            className="w-full bg-foreground py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-background transition-colors hover:bg-signal disabled:opacity-50 select-none touch-manipulation active:scale-[0.97] active:opacity-90 duration-120"
           >
             {mode === "signin" ? "Entrar" : "Criar conta"}
           </button>
@@ -129,7 +129,7 @@ function AuthPage() {
           <button
             type="button"
             onClick={google}
-            className="w-full border border-line py-3 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors hover:bg-accent"
+            className="w-full border border-line py-3 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors hover:bg-accent select-none touch-manipulation active:scale-[0.97] active:bg-accent duration-120"
           >
             Entrar com Google
           </button>
@@ -141,7 +141,7 @@ function AuthPage() {
               setInfo(null);
               setMode((m) => (m === "signin" ? "signup" : "signin"));
             }}
-            className="w-full pt-1 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
+            className="w-full pt-1 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground select-none touch-manipulation active:opacity-70 duration-120"
           >
             {mode === "signin" ? "Não tem conta? Criar conta" : "Já tem conta? Entrar"}
           </button>

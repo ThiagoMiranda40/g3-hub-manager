@@ -171,7 +171,10 @@ function ShowDetail() {
 
   return (
     <AppShell email={session.user.email}>
-      <Link to="/" className="label-mono hover:text-foreground">
+      <Link
+        to="/"
+        className="label-mono hover:text-foreground active:opacity-70 transition-opacity duration-120 touch-manipulation"
+      >
         ← Voltar para a agenda
       </Link>
 
@@ -215,18 +218,17 @@ function ShowDetail() {
                 <Link
                   to="/shows/$id/ficha"
                   params={{ id }}
-                  className="border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] hover:bg-accent"
+                  className="border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] hover:bg-accent active:scale-[0.97] active:bg-accent transition-all duration-120 touch-manipulation"
                 >
                   Ver ficha de produção
                 </Link>
                 <button
-
                   onClick={() => {
                     setEditing((v) => !v);
                     setConfirmDelete(false);
                     setActionError(null);
                   }}
-                  className="border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] hover:bg-accent"
+                  className="border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] hover:bg-accent active:scale-[0.97] active:bg-accent transition-all duration-120 touch-manipulation"
                 >
                   {editing ? "Cancelar" : "Editar"}
                 </button>
@@ -237,7 +239,7 @@ function ShowDetail() {
                     setConfirmText("");
                     setActionError(null);
                   }}
-                  className="border border-destructive px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-destructive hover:bg-destructive/10"
+                  className="border border-destructive px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-destructive hover:bg-destructive/10 active:scale-[0.97] active:bg-destructive/20 transition-all duration-120 touch-manipulation"
                 >
                   Excluir
                 </button>
@@ -280,7 +282,7 @@ function ShowDetail() {
                     deleteShow.isPending
                   }
                   onClick={() => deleteShow.mutate()}
-                  className="bg-destructive px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-destructive-foreground disabled:opacity-40"
+                  className="bg-destructive px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-destructive-foreground disabled:opacity-40 active:scale-[0.97] transition-all duration-120 touch-manipulation"
                 >
                   Excluir definitivamente
                 </button>
@@ -303,7 +305,7 @@ function ShowDetail() {
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
               }}
-              className="bg-foreground px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-background transition-colors hover:bg-signal"
+              className="bg-foreground px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-background transition-colors hover:bg-signal active:scale-[0.97] active:opacity-90 duration-120 touch-manipulation"
             >
               {copied ? "Copiado" : "Copiar link"}
             </button>
@@ -359,7 +361,7 @@ function ShowDetail() {
                               `${m.name} tem ${memberDocs} documento${memberDocs === 1 ? "" : "s"} enviado${memberDocs === 1 ? "" : "s"}. Exclua o${memberDocs === 1 ? "" : "s"} documento${memberDocs === 1 ? "" : "s"} antes de remover a pessoa.`,
                             )
                           }
-                          className="shrink-0 border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+                          className="shrink-0 border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground active:scale-[0.97] transition-all duration-120 touch-manipulation"
                         >
                           Excluir
                         </button>
@@ -417,7 +419,7 @@ function ShowDetail() {
                   <button
                     type="submit"
                     disabled={addMember.isPending || !role}
-                    className="bg-foreground px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-background disabled:opacity-50"
+                    className="bg-foreground px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-background disabled:opacity-50 active:scale-[0.97] transition-all duration-120 touch-manipulation"
                   >
                     Adicionar
                   </button>
@@ -449,7 +451,7 @@ function ShowDetail() {
                               </span>
                               <button
                                 onClick={() => openDocument(d.file_path)}
-                                className="truncate font-mono text-[11px] underline-offset-2 hover:underline"
+                                className="truncate font-mono text-[11px] underline-offset-2 hover:underline active:opacity-70 transition-opacity duration-120 touch-manipulation"
                               >
                                 {d.file_name ?? "abrir arquivo"}
                               </button>
@@ -662,14 +664,14 @@ function EditShowForm({
           <button
             type="submit"
             disabled={save.isPending}
-            className="bg-signal px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-signal-foreground disabled:opacity-50"
+            className="bg-signal px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-signal-foreground disabled:opacity-50 active:scale-[0.97] transition-all duration-120 touch-manipulation"
           >
             Salvar alterações
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="border border-line px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] hover:bg-accent"
+            className="border border-line px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] hover:bg-accent active:scale-[0.97] active:bg-accent transition-all duration-120 touch-manipulation"
           >
             Cancelar
           </button>

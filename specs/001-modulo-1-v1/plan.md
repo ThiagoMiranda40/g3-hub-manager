@@ -72,3 +72,33 @@ A especificação completa das tabelas, constraints, índices e políticas de se
 1. **Retrocompatibilidade:** Nenhum dado do protótipo em produção é perdido; pessoas são backfilled a partir do elenco existente.
 2. **Conexões Móveis no Palco:** Páginas públicas são otimizadas para carregamento ultra-rápido (< 100KB gzipped) e touch targets confortáveis (>= 48px).
 3. **Contraste de Acessibilidade:** Conformidade estrita com WCAG 2.2 AA através da calibração do tom lilás no tema claro.
+
+---
+
+## 6. Arquitetura de Segurança (OWASP Top 10:2025 & Padrões Seguros por Padrão)
+
+O Módulo 1 incorpora segurança por padrão em todas as camadas da aplicação:
+
+1. **A01:2025 — Prevenção de Controle de Acesso Quebrado (BOLA / IDOR):**
+   - No painel administrativo: Todo acesso aos dados é protegido por Row Level Security no PostgreSQL (`user_id = auth.uid()`).
+   - Nas rotas públicas anônimas (`/p/$token` e `/r/$token`): A verificação de permissão é validada exclusivamente no servidor. A atualização de itens de rider exige a amarração atômica de `show_id` e `rider_public_token`, impedindo manipulação de itens de outros shows.
+2. **A02:2025 — Configuração Segura & Gestão de Segredos:**
+   - Segredos administrativos (`SUPABASE_SERVICE_ROLE_KEY`) operam exclusivamente no backend (Nitro server handlers) e nunca são prefixados com `VITE_` nem enviados ao bundle do cliente.
+   - Arquivo `.env` protegido no `.gitignore` desde a concepção.
+3. **A04:2025 — Proteção de Dados Sensíveis e Entropia Criptográfica:**
+   - Os tokens públicos (`public_token` e `rider_public_token`) utilizam `encode(gen_random_bytes(9), 'hex')`, gerando 72 bits de entropia criptográfica nativa no PostgreSQL — invulnerável a varredura ou ataques de força bruta.
+   - Dados sensíveis de integrantes (como Chave Pix e CPF) **nunca são trafegados** para páginas públicas, ficando restritos à sessão autenticada do produtor.
+4. **A05:2025 — Prevenção de Injeção de Código e SQL:**
+   - Todas as operações utilizam o SDK do Supabase com consultas estritamente parametrizadas pelo PostgREST. Nenhuma consulta concatena dados de entrada do usuário.
+5. **A08:2025 — Integridade de Dados & Proteção contra Stored XSS:**
+   - Upload de comprovantes possui validação tripla no servidor: formato de extensão, tamanho máximo (20MB) e verificação do MIME type real nos metadados do storage. Formatos de risco de script (como `.svg`, `.html`, `.exe`) são terminantemente rejeitados.
+6. **A10:2025 — Tratamento de Erros Seguro:**
+   - Mensagens de erro visíveis ao usuário final são padronizadas e amigáveis via Zod, sem expor stack traces, caminhos de arquivo internos ou logs de infraestrutura.
+
+---
+
+## 7. Fora de Escopo Técnico desta Implementação
+
+- Não será implementado envio de notificações ativas por WhatsApp ou e-mail nesta etapa (depende da infraestrutura do Módulo 3 / Módulo 5).
+- Não haverá suporte offline com IndexedDB (o app continuará operando via SSR + React Query com cache de curta duração).
+- Não haverá edição colaborativa em tempo real com WebSockets tipo Google Docs para o rider; atualizações são refletidas por invalidação de query do React Query.

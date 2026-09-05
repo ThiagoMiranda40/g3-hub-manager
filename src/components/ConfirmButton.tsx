@@ -46,7 +46,7 @@ export function ConfirmButton({
         setArmed(false);
         onConfirm();
       }}
-      className={armed ? confirmClassName || className : className}
+      className={`${armed ? confirmClassName || className : className} transition-all duration-120 active:scale-[0.97] touch-manipulation select-none`}
     >
       {armed ? confirmLabel : label}
     </button>

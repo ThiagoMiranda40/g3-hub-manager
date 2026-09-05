@@ -142,7 +142,7 @@ function Dashboard() {
           <div className="label-mono">(b) Próximas datas</div>
           <button
             onClick={() => setOpen((v) => !v)}
-            className="bg-foreground px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-background transition-colors hover:bg-signal"
+            className="bg-foreground px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-background transition-all duration-120 hover:bg-signal active:scale-[0.96] active:opacity-90 touch-manipulation cursor-pointer"
           >
             {open ? "Fechar" : "Novo show"}
           </button>
@@ -184,7 +184,7 @@ function Dashboard() {
                   key={key}
                   type="button"
                   onClick={() => setStatusFilter(key)}
-                  className={`flex-1 border px-2 py-2 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+                  className={`flex-1 border px-2 py-2 font-mono text-[10px] uppercase tracking-wider transition-all duration-120 active:scale-[0.95] active:opacity-80 touch-manipulation cursor-pointer ${
                     statusFilter === key
                       ? "border-foreground bg-foreground text-background"
                       : "border-line bg-background text-muted-foreground hover:text-foreground"
@@ -212,7 +212,7 @@ function Dashboard() {
                 key={show.id}
                 to="/shows/$id"
                 params={{ id: show.id }}
-                className="group grid grid-cols-1 items-center gap-3 border-b border-line py-5 transition-colors hover:bg-accent/50 sm:grid-cols-12 sm:gap-6"
+                className="group grid grid-cols-1 items-center gap-3 border-b border-line py-5 transition-all duration-120 hover:bg-accent/50 active:bg-accent/80 active:scale-[0.99] touch-manipulation cursor-pointer sm:grid-cols-12 sm:gap-6"
               >
                 <div className="font-mono text-[11px] tracking-wider text-muted-foreground sm:col-span-2">
                   <div className="font-medium text-foreground">

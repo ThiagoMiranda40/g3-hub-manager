@@ -261,7 +261,7 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2">
+    <label className="flex cursor-pointer items-center gap-2 select-none active:opacity-75 transition-opacity duration-120 touch-manipulation">
       <input
         type="checkbox"
         checked={checked}
@@ -290,7 +290,7 @@ function DeleteButton({
         <button
           type="button"
           onClick={() => setWarn(true)}
-          className="border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
+          className="border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground active:scale-[0.97] transition-all duration-120 touch-manipulation"
         >
           Excluir
         </button>
@@ -342,7 +342,7 @@ function CreateRow({
       />
       <button
         type="submit"
-        className="bg-foreground px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.18em] text-background"
+        className="bg-foreground px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.18em] text-background active:scale-[0.97] active:opacity-90 transition-all duration-120 touch-manipulation"
       >
         Adicionar
       </button>
