@@ -84,7 +84,37 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Controle de documentos de turnê: elenco por show, link público de envio e status de pendências.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Hub Manager Tour" },
+      { property: "og:title", content: "Hub Manager Tour — Gerenciamento de Turnês" },
+      {
+        property: "og:description",
+        content:
+          "Controle de documentos de turnê: elenco por show, link público de envio e status de pendências.",
+      },
+      { property: "og:url", content: "https://hubmanagertour.triadetecnologiaesolucoes.com.br" },
+      {
+        property: "og:image",
+        content: "https://hubmanagertour.triadetecnologiaesolucoes.com.br/og-image.png",
+      },
+      {
+        property: "og:image:secure_url",
+        content: "https://hubmanagertour.triadetecnologiaesolucoes.com.br/og-image.png",
+      },
+      { property: "og:image:type", content: "image/png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Hub Manager Tour — Gerenciamento de Turnês" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Hub Manager Tour — Gerenciamento de Turnês" },
+      {
+        name: "twitter:description",
+        content:
+          "Controle de documentos de turnê: elenco por show, link público de envio e status de pendências.",
+      },
+      {
+        name: "twitter:image",
+        content: "https://hubmanagertour.triadetecnologiaesolucoes.com.br/og-image.png",
+      },
     ],
     links: [
       {
@@ -98,6 +128,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,
